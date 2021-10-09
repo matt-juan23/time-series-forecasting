@@ -1,31 +1,61 @@
 \documentclass{article}
+\usepackage{setspace}
 \title{Time Series Analysis and Forecasting}
 \author{Matthew Juan z5259434}
 \date{}
 \begin{document}
   \maketitle
-  % Time Series Analysis
-  \begin{enumerate}
-    \item Introduction
-    \item Time Series Forecasting models
-    \begin{enumerate}
-      \item ARIMA
-      \begin{enumerate}
-        \item Maths + intuition
-        \item Seasonal variant
-      \end{enumerate}
-      \item Exponential Smoothing
-      \begin{enumerate}
-        \item Maths + intuition
-        \item Seasonal variant
-      \end{enumerate}
-    \end{enumerate}
-    \item Implementation + finding hyperparameters
-    \begin{enumerate}
-      \item ARIMA
-      \item Exponential Smoothing
-    \end{enumerate}
-    \item Results
-    \item Conclusion
-  \end{enumerate}
+
+  \newpage
+  \doublespacing
+  \tableofcontents
+  \singlespacing
+  \newpage
+  \section{Introduction to Time Series'}
+  Time series are found all over the place and are extremely useful
+  to analyse and more importantly, forecast. There are many situations where
+  you want to predict past your last data point.
+  Use cases include:
+  \begin{itemize}
+    \item Traders predicting the stock market so they know when to buy or sell
+    \item Data centre operators identifying when a critical system may go down or is acting irregularly
+    \item Retail store managers knowing how to maximise what stock they order to maximise profit and minimise items that won't sell
+  \end{itemize}
+  Unfortunatly, just like humans, it is impossible to predict the future.
+  However, by analysing the time series, it is possible to formulate
+  mathematical properites that can be used to give a rough estimate of
+  where the data is heading.
+
+  \section{Properties of Time Series Data}
+  There are 3 components which make up a time series, trend, seasonality, and residual. Understanding their role and what they represent as well as some other key definitions are needed before diving in to analysing time series data.
+  \subsection{Trend}
+  The first component is trend. Trend can be viewed as how the data is changing overall. Is the data increasing or decreasing.
+  \subsection{Seasonality}
+  Seasonality refers to a regular occuring pattern that emerges within a given period. E.g peaks or valleys in the data during certain months or hours in the day.
+  \subsection{Residual}
+  Residual are the parts left over after fitting a model to the data. In many time series models, it is defined as the difference between the actual observation and the predicted value.
+  \subsection{Additive vs Multiplicative}
+  The trend and seasonality in a time series can be classified as being additive or multiplicative. 
+  In additive time series', the data exhibits a general upwards or downwards trend but does so at a constant rate. Peaks and valleys in your data are roughly the same size.
+  In contrast, multiplicative time series data exhibits peaks or valleys that are amplified within the seasonal activity. The data becomes exaggerated and the difference between peaks at the start are very different than at the tail.
+  \subsection{Stationarity}
+
+  \section{Time Series Forecasting Models}
+  \subsection{ARIMA}
+  \subsubsection{Formulas}
+  \subsubsection{Seasonal Variation}
+  \subsection{Exponential Smoothing}
+  \subsubsection{Formulas}
+  \subsubsection{Seasonal Variation}
+
+  \section{Implementation}
+  \subsection{ARIMA}
+  \subsection{Exponential Smoothing}
+
+  \section{Results}
+
+  \section{Conclusion}
+
+  \newpage
+
 \end{document}
