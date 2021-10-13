@@ -2,6 +2,9 @@
 
 \usepackage{setspace}
 \usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{subcaption}
 \usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{float}
@@ -32,7 +35,7 @@
   However, by analysing the time series, it is possible to formulate
   statistical properites that can be used to give a rough estimate of
   where the data is heading.
-
+  \newpage
   \section{Properties of Time Series Data}
   There are 3 components which make up a time series, trend, seasonality, and residual. Understanding their role and what they represent as well as some other key definitions are needed before diving in to analysing time series data.
   
@@ -49,27 +52,52 @@
   The trend and seasonality in a time series can be classified as being additive or multiplicative.
   In additive time series', the data exhibits a general upwards or downwards trend but does so at a constant rate. Peaks and valleys in your data are roughly the same size.
   In contrast, multiplicative time series data exhibits peaks or valleys that are amplified within the seasonal activity. The data becomes exaggerated and the difference between peaks at the start are very different than at the tail.
-  
+  \newpage
   \subsection{Stationarity}
   For time series analysis to be most effective, the data needs to form a stationary process. 
   A random variable that is a time series is classified stationary if it's probabilty distribution is constant throughout the full range of times. 
-  Formally, if $T$ is the set of all times in your time series
+  Formally, if $T$ is the set of all times in your time series of length $n$, a random process $X$ is stationary if the joint probability distribution at times $t_1,...,t_n \in T$ and $t_1+\Delta,...,t_n+\Delta \in T,\  \Delta \in \mathbb{R}$ are equal. That is
   \begin{equation*}
-    F_{X(t)}(x) = F_{X(t+\Delta)}(x)\ \forall t, t+\Delta \in T
+    F_{X}(x_{t_1},...,x_{t_n}) = F_{X}(x_{{t_1}+\Delta},...,x_{{t_n}+\Delta})\ \forall x_{t_1},...,x_{t_n} \in T
   \end{equation*}
-  Intuitively, this means a stationary time series has constant mean, variance, covariance, etc. Below shows the differences between stationary and non-stationary processes.
+  Intuitively, this means a stationary time series has constant propertues such as mean, variance, covariance, etc. Below shows the differences between stationary and non-stationary processes.
   \begin{figure}[H]
     \includegraphics[width=\linewidth]{stationary_time_series.png}
   \end{figure}
   \begin{flushleft}
     Stationarity can be tested using the Dickey-Fuller test which will be shown later in the implementation.
 
-    If you have a non-stationary time series, there are a few ways to make it stationary. 
-    
+    If you have a non-stationary time series, there are a few ways to make it stationary.
+    \begin{figure}[H]
+      \centering
+      \begin{subfigure}[b]{0.2\linewidth}
+        \includegraphics[height=80mm]{data_numbers.png}
+      \end{subfigure}
+      \begin{subfigure}[b]{0.7\linewidth}
+        \includegraphics[height=80mm, width=120mm]{data_plot.png}
+      \end{subfigure}
+    \end{figure}
+    \newpage
     The most common is differencing. Differencing involves creating a new dataset where the values at time $t$ is equal to the difference between the original value at time $t$ and original value at $t-1$. This process can be repeated multiple times to obtain a potentially more stationary series known as higher order differencing.
-
+    \begin{figure}[H]
+      \centering
+      \begin{subfigure}[b]{0.2\linewidth}
+        \includegraphics[height=80mm]{diff_numbers.png}
+      \end{subfigure}
+      \begin{subfigure}[b]{0.7\linewidth}
+        \includegraphics[height=80mm, width=120mm]{diff_plot.png}
+      \end{subfigure}
+    \end{figure}
     Another common technique is to detrend by model fitting. You simply fit a regression model, such as linear or exponential, and create a new dataset where each value at time $t$ is equal to the difference between the predicted value and the original value.
-
+    \begin{figure}[H]
+      \centering
+      \begin{subfigure}[b]{0.3\linewidth}
+        \includegraphics[height=80mm]{regression_data.png}
+      \end{subfigure}
+      \begin{subfigure}[b]{0.6\linewidth}
+        \includegraphics[height=80mm, width=120mm]{regression_plot.png}
+      \end{subfigure}
+    \end{figure}
     Other techniques include seasonal differencing, where you perform differencing but with value at time $t$ and $t-\rho$ where $\rho$ is the period of your data, or performing non-linear transformation your dataset such as logging.
   \end{flushleft}
   \newpage
@@ -95,6 +123,7 @@
 
   \section{Resources}
   \url{https://www.probabilitycourse.com/chapter10/10_1_4_stationary_processes.php}
+  \url{https://www.statology.org/detrend-data/}
 
   \newpage
 
