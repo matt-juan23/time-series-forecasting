@@ -9,6 +9,13 @@
 \usepackage{graphicx}
 \usepackage{float}
 
+\usepackage[
+backend=biber,
+style=numeric,
+sorting=none
+]{biblatex}
+\addbibresource{mybib.bib}
+
 \title{Time Series Analysis and Forecasting}
 \author{Matthew Juan z5259434}
 \date{}
@@ -45,7 +52,7 @@
   Seasonality refers to a regular occuring pattern that emerges within a given period. E.g peaks or valleys in the data during certain months or hours in the day.
   
   \subsection{Residual}
-  Residual are the parts left over after fitting a model to the data. In many time series models, it is defined as the difference between the actual observation and the predicted value.
+  Residual, also commonly referred to as errors, are the parts left over after fitting a model to the data. In many time series models, it is defined as the difference between the actual observation and the predicted value.
   
   \subsection{Additive vs Multiplicative}
   The trend and seasonality in a time series can be classified as being additive or multiplicative.
@@ -53,81 +60,72 @@
   In contrast, multiplicative time series data exhibits peaks or valleys that are amplified within the seasonal activity. The data becomes exaggerated and the difference between peaks at the start are very different than at the tail.
   \newpage
   \subsection{Stationarity}
-  The concept of stationarity is crucial for time series analysis and  For time series analysis to be most effective, the data needs to form a stationary process. 
+  Before going into analysis, the time series needs to be stationary
   A random variable that forms a time series is classified stationary if it's probabilty distribution is constant throughout the full range of times. 
   Formally, if $T$ is the set of all times in your time series of length $n$, a random process $X$ is stationary if the joint probability distribution at times $t_1,...,t_n \in T$ and $t_1+\Delta,...,t_n+\Delta \in T,\  \Delta \in \mathbb{R}$ are equal. That is
-  \begin{equation*}
+  \begin{equation}
     F_{X}(x_{t_1},...,x_{t_n}) = F_{X}(x_{{t_1}+\Delta},...,x_{{t_n}+\Delta})\ \forall x_{t_1},...,x_{t_n} \in T
-  \end{equation*}
+  \end{equation}
   Intuitively, this means a stationary time series has constant propertues such as mean, variance, covariance, etc. Below shows the differences between stationary and non-stationary processes.
   \begin{figure}[H]
-    \hspace*{-2cm}
+    \centering
     \includegraphics[scale=0.8]{stationary_time_series.png}
   \end{figure}
-  \begin{flushleft}
+
   \subsubsection{How to test for stationarity}
     To determine whether a time series is stationary or not, the Augmented Dickey Fuller(ADF) test can be performed. ADF performs a hypothesis test and upon observing p-value $p < \alpha$ where $\alpha$ is commonly 0.05, the hypothesis is rejected and the data is considered to be stationary.
 
   \subsubsection{Methods of making a time series stationary}
-    If you have a non-stationary time series, there are a few ways to make it stationary. Let's use the below data as an example.
+    If you have a non-stationary time series, there are a few ways to make it stationary. Let's use the Shampoo Sales dataset which describes the monthly number of sales of shampoo over a 3 year period.
+    The data here has a distinct multiplicative increasing trend and is clearly non stationary. Using the ADF test, the p-value comes out to $1>0.05$ so there is weak evidence against the null hypothesis so the data is non-stationary.
     \begin{figure}[H]
-      \includegraphics[scale=0.67]{data_both.png}
+      \includegraphics[width=\linewidth]{data_both.png}
     \end{figure}
-    \newpage
     The most common is differencing. Differencing involves creating a new dataset where the values at time $t$ is equal to the difference between the original value at time $t$ and original value at $t-1$. So if $y'$ is the new dataset and $y$ is the original data, then
-    \begin{equation*}
-      y_t'=y_t-y_{t-1}.
-    \end{equation*}
+    \begin{equation}
+      y_t' = y_t - y_{t-1}.
+    \end{equation}
     This process can be repeated multiple times to obtain a potentially more stationary series known as higher order differencing. As you can see, the data looks much more stationary than before.
     \begin{figure}[H]
       \centering
-      \includegraphics[scale=0.6]{diff_numbers.png}
-    \end{figure}
-    \begin{figure}[H]
-      \centering
-      \includegraphics[scale=0.8]{diff_plot.png}
+      \includegraphics[width=\linewidth]{diff_both.png}
     \end{figure}
     Another common technique is to detrend by model fitting. You simply fit a regression model, such as linear or exponential, and create a new dataset where each value at time $t$ is equal to the difference between the predicted value and the original value. 
-    \begin{equation*}
-      y_t'=pred_t-y_t.
-    \end{equation*}
+    \begin{equation}
+      y_t' = y_t - pred_t.
+    \end{equation}
     Again, the data is much more stationary than the original.
     \begin{figure}[H]
       \centering
-      \includegraphics[scale=0.65]{regression_data.png}
-    \end{figure}
-    \begin{figure}[H]
-      \centering
-      \includegraphics[scale=0.8]{regression_plot.png}
+      \includegraphics[width=\linewidth]{reg_both.png}
     \end{figure}
     Other techniques include seasonal differencing, where you perform differencing but with value at time $t$ and $t-\rho$ where $\rho$ is the period of your data, or performing non-linear transformation your dataset such as logging. These can be combined with previous techniques to increase stationarity.
-  \end{flushleft}
   \newpage
   \section{Time Series Forecasting Models}
-  There are many types of forecasting models but this paper will look arguably the most popular two. ARIMA (Auto-Regressive Integrated Moving Average) and Exponential Smoothing models. 
+    There are many types of forecasting models but this paper will look arguably the most popular two. ARIMA (Auto-Regressive Integrated Moving Average) and Exponential Smoothing models. 
   \subsection{ARIMA}
-  ARIMA is an extension of the ARMA or Box-Jenkin model popularised by George E. P. Box and Gwilym Jenkins in 1970. The main difference is that ARIMA simply allows for an extra parameter $d$ which defines how much differencing should be done before fitting the model, whereas ARMA assumes the data is stationary already. 
-  ARIMA is actually a combination of two models, an autoregressive model (AR) and a moving averages model (MA). We will dive into what makes up both models and how ARIMA is able to effectively combine the two to create an even stronger model.
-  As previously mentioned, a random variable in the form of a time series can be viewed as being a combination of signal and noise. The goal of ARIMA is to filter the noise and extrapolate the signal.
+    ARIMA is an extension of the ARMA or Box-Jenkin model popularised by George E. P. Box and Gwilym Jenkins in 1970. The main difference is that ARIMA simply allows for an extra parameter $d$ which defines how much differencing should be done before fitting the model, whereas ARMA assumes the data is stationary already. 
+    ARIMA is actually a combination of two models, an autoregressive model (AR) and a moving averages model (MA). We will dive into what makes up both models and how ARIMA is able to effectively combine the two to create an even stronger model.
+    As previously mentioned, a random variable in the form of a time series can be viewed as being a combination of signal and noise. The goal of ARIMA is to filter the noise and extrapolate the signal.
   \subsubsection{Autoregressive Models}
-  The term \emph{autoregressive} defines that the model uses a linear combination of previous values of a variable and learned predictors. This differs from a typical regression model which predicts based on a linear combination of the input features and learned predictors.
-  Autoregressive models has one parameter $p$ which defines the order of the model. This parameter defines how many previous values influence the one being predicted. 
-  An $AR(1)$ model is simply defines a model in which the predicted value is equal to some linear combination of the value at the previous time step
-  \begin{equation*}
-    y_t=c + \phi_1 y_{t-1} + \varepsilon,
-  \end{equation*}
-  where $\varepsilon_t$ is some white noise.
-  An $AR(2)$ model uses the previous two timesteps as so on.
-  Thus, an $AR(p)$ model can be generalised to
-  \begin{equation*}
-    y_t=c + \phi_1 y_{t-1} + \phi_2 y_{t-2} + ... + \phi_p y_{t-p} + \varepsilon_t.
-  \end{equation*}
-  We can see that we are using previous known values as the features to predict the future. 
+    The term \emph{autoregressive} defines that the model uses a linear combination of previous values of a variable and learned predictors. This differs from a typical regression model which predicts based on a linear combination of the input features and learned predictors.
+    Autoregressive models has one parameter $p$ which defines the order of the model. This parameter defines how many previous values influence the one being predicted. 
+    An $AR(1)$ model is simply defines a model in which the predicted value is equal to some linear combination of the value at the previous time step
+    \begin{equation}
+      y_t = \mu + \phi_1 y_{t-1} + \varepsilon_t,
+    \end{equation}
+    where $\mu$ is the mean of the data and $\varepsilon_t$ is some white noise.
+    An $AR(2)$ model uses the previous two timesteps as so on.
+    Thus, an $AR(p)$ model can be generalised to
+    \begin{equation}
+      y_t = \mu + \phi_1 y_{t-1} + \phi_2 y_{t-2} + ... + \phi_p y_{t-p} + \varepsilon_t.
+    \end{equation}
+    We can see that we are using previous known values as the features to predict the future. 
   \subsubsection{Moving Average Models}
-  In a sort of similar manner, Moving Average (MA) models use the errors of past forecasts to predict. An MA model instead has parameter $q$ so an $MA(q)$ model can be written similarly as
-  \begin{equation*}
-    y_t=c + \theta_1 \varepsilon_{t-1} + \theta_2 \varepsilon_{t-2} + ... + \theta_q \varepsilon_{t-q}.
-  \end{equation*}
+    In a sort of similar manner, Moving Average (MA) models use the errors of past forecasts to predict. An MA model instead has parameter $q$ so an $MA(q)$ model can be written similarly as
+    \begin{equation}
+      y_t = \mu + \theta_1 \varepsilon_{t-1} + \theta_2 \varepsilon_{t-2} + ... + \theta_q \varepsilon_{t-q}.
+    \end{equation}
   \subsubsection{Putting It All Together}
   \subsubsection{Seasonal Variation}
   \subsection{Exponential Smoothing}
@@ -146,6 +144,7 @@
   \url{https://www.probabilitycourse.com/chapter10/10_1_4_stationary_processes.php}
   \url{https://www.statology.org/detrend-data/}
 
-  \newpage
+  bibliography\cite{articleFactCheck}
+  \printbibliography
 
 \end{document}
