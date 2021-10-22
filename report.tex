@@ -63,9 +63,9 @@ sorting=none
   Before going into analysis, the time series needs to be stationary
   A random variable that forms a time series is classified stationary if it's probabilty distribution is constant throughout the full range of times. 
   Formally, if $T$ is the set of all times in your time series of length $n$, a random process $X$ is stationary if the joint probability distribution at times $t_1,...,t_n \in T$ and $t_1+\Delta,...,t_n+\Delta \in T,\  \Delta \in \mathbb{R}$ are equal. That is
-  \begin{equation}
+  \begin{equation*}
     F_{X}(x_{t_1},...,x_{t_n}) = F_{X}(x_{{t_1}+\Delta},...,x_{{t_n}+\Delta})\ \forall x_{t_1},...,x_{t_n} \in T
-  \end{equation}
+  \end{equation*}
   Intuitively, this means a stationary time series has constant propertues such as mean, variance, covariance, etc. Below shows the differences between stationary and non-stationary processes.
   \begin{figure}[H]
     \centering
@@ -81,25 +81,33 @@ sorting=none
     \begin{figure}[H]
       \includegraphics[width=\linewidth]{data_both.png}
     \end{figure}
-    The most common is differencing. Differencing involves creating a new dataset where the values at time $t$ is equal to the difference between the original value at time $t$ and original value at $t-1$. So if $y'$ is the new dataset and $y$ is the original data, then
-    \begin{equation}
-      y_t' = y_t - y_{t-1}.
-    \end{equation}
-    This process can be repeated multiple times to obtain a potentially more stationary series known as higher order differencing. As you can see, the data looks much more stationary than before.
+    The most common is differencing. Differencing involves creating a new dataset where the values at time $t$ is equal to the difference between the original value at time $t$ and original value at $t-1$. So if $y$ is the new dataset and $Y$ is the original data, then
+    \begin{equation*}
+      y_t = Y_t - Y_{t-1}.
+    \end{equation*}
+    Sometimes the differenced data will not make the data stationary enough and it may be necessary to difference the data again known as 2nd order differencing. This process is applicable to higher orders
+    Note, the 2nd order difference is not $y_t = Y_t - Y_{t-2}$ but it is the first differnce of the first difference so it comes out to
+    \begin{equation*}
+      y_t = (Y_t - Y_{t-1}) - (Y_{t-1} - Y_{t-2}).
+    \end{equation*}
+    The p-value from the ADF test is about $1.8 \times 10^{-10} < 0.05$ so the data is now stationary.
     \begin{figure}[H]
       \centering
       \includegraphics[width=\linewidth]{diff_both.png}
     \end{figure}
-    Another common technique is to detrend by model fitting. You simply fit a regression model, such as linear or exponential, and create a new dataset where each value at time $t$ is equal to the difference between the predicted value and the original value. 
-    \begin{equation}
-      y_t' = y_t - pred_t.
-    \end{equation}
+    Another common technique is to detrend by model fitting. You simply fit a regression model, such as linear or exponential, and create a new dataset where each value at time $t$ is equal to the difference between the original value and the predicted value.
+    When fitted with a 2nd order polynomial regression model, the resulting differences produced a p-value of about $3.4 \times 10^{-10}< 0.05$ so again, the data is now stationary.
+    \begin{equation*}
+      y_t = Y_t - pred_t.
+    \end{equation*}
     Again, the data is much more stationary than the original.
     \begin{figure}[H]
       \centering
       \includegraphics[width=\linewidth]{reg_both.png}
     \end{figure}
-    Other techniques include seasonal differencing, where you perform differencing but with value at time $t$ and $t-\rho$ where $\rho$ is the period of your data, or performing non-linear transformation your dataset such as logging. These can be combined with previous techniques to increase stationarity.
+    There are various other techniques that can be performed and combined with one another to make your data more stationary.
+    If your data has a seasonal pattern to it, seasonal differencing can be performed where you take the difference between $t$ and $t-\rho$ where $\rho$ is the period of your data.
+    Non-linear transformations your dataset such as logging can also prove effective at making data stationary.
   \newpage
   \section{Time Series Forecasting Models}
     There are many types of forecasting models but this paper will look arguably the most popular two. ARIMA (Auto-Regressive Integrated Moving Average) and Exponential Smoothing models. 
@@ -111,22 +119,48 @@ sorting=none
     The term \emph{autoregressive} defines that the model uses a linear combination of previous values of a variable and learned predictors. This differs from a typical regression model which predicts based on a linear combination of the input features and learned predictors.
     Autoregressive models has one parameter $p$ which defines the order of the model. This parameter defines how many previous values influence the one being predicted. 
     An $AR(1)$ model is simply defines a model in which the predicted value is equal to some linear combination of the value at the previous time step
-    \begin{equation}
+    \begin{equation*}
       y_t = \mu + \phi_1 y_{t-1} + \varepsilon_t,
-    \end{equation}
-    where $\mu$ is the mean of the data and $\varepsilon_t$ is some white noise.
+    \end{equation*}
+    where $\mu$ is the average period to period change and $\varepsilon_t$ is some white noise.
     An $AR(2)$ model uses the previous two timesteps as so on.
     Thus, an $AR(p)$ model can be generalised to
-    \begin{equation}
+    \begin{equation*}
       y_t = \mu + \phi_1 y_{t-1} + \phi_2 y_{t-2} + ... + \phi_p y_{t-p} + \varepsilon_t.
-    \end{equation}
-    We can see that we are using previous known values as the features to predict the future. 
+    \end{equation*}
+    We can see that we are using previous known values as the features to predict the future.
+
+    Let's see how this works for the first differenced data we saw before. For my implementation, to estimate the parameters I used a linear least squares solver. Firstly, the lags are calculated and then we estimate parameters using these lags and our original time series values. We simply do a dot product between the coefficients and add it to our value for $\mu$ to retrieve our predictions. 
+    
+    This is the resulting predictions of a few $AR(p)$ models.
+
+    There isn't too much change apart from the beginning of the data series where no lags could be properly calculated so they were filled with 0.
+
+    The already known lags are used to forecast one time step ahead. This forecast is then assumed to be the observed value and further values can be forecasted in a similar manner.
+
   \subsubsection{Moving Average Models}
     In a sort of similar manner, Moving Average (MA) models use the errors of past forecasts to predict. An MA model instead has parameter $q$ so an $MA(q)$ model can be written similarly as
-    \begin{equation}
-      y_t = \mu + \theta_1 \varepsilon_{t-1} + \theta_2 \varepsilon_{t-2} + ... + \theta_q \varepsilon_{t-q}.
-    \end{equation}
+    \begin{equation*}
+      y_t = \mu + \varepsilon_t + \theta_1 \varepsilon_{t-1} + \theta_2 \varepsilon_{t-2} + ... + \theta_q \varepsilon_{t-q}.
+    \end{equation*}
+    If your data is properly stationary, the error terms produced, $\varepsilon_t$, should form white noise and form a normal distribution with $0$ mean and $\sigma^2$ variance.
+
+    Parameters were again estimated using a linear least squares solver and this is the results of a few $MA(q)$ models on the same data. Observe that the residuals produced do generally form a normal distribution with 0 mean.
+
   \subsubsection{Putting It All Together}
+  When we combine differencing, an AR, and an MA model, we obtain an ARIMA model. It's general equation is as follows
+  \begin{equation*}
+    y_t' = \mu + \phi_1 y_{t-1}' + ... + \phi_p y_{t-p}' + \theta_1 \varepsilon_{t-1}' + ... + \theta_q \varepsilon_{t-q}' + \varepsilon_t
+  \end{equation*}
+  where $y_t'$ is the differenced data.
+
+  An ARIMA model has 3 parameters and can fully be expressed as ARIMA$(p,d,q)$.
+  \begin{itemize}
+    \item $p$ is order of autoregressive component
+    \item $d$ is the order of differencing to be performed on the data
+    \item $q$ is the order of moving averages component
+  \end{itemize}
+  This generalised model is great since we don't have to difference the data ourselves and allows for the combination of $AR(p)$ and $MA(q)$ models. The implementation of this is quite simple as you just have to add the results of the AR and MA components together.
   \subsubsection{Seasonal Variation}
   \subsection{Exponential Smoothing}
   \subsubsection{Formulas}
