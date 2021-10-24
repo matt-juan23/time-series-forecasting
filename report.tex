@@ -208,7 +208,26 @@ sorting=none
   This gives us an $ARIMA(1,1,1)$ model and this is how it fits with the data.
 
   Running this through a parameter optimiser, it gives back a parameter list of $(1,1,2)$ so our estimation was pretty close and shows that these rules are not absolute.
+  
   \subsubsection{Seasonal Variation}
+  Many time series data in the real work exhibit some form of seasonality. These could include higher network traffic during peak hours of the day or increased spending during Christmas. In such cases, we need to take differences greater than 1 known as the seasonal difference. For example, if there are 12 periods in a season, the seasonal diffence is $y_t = Y_t - Y_{t-12}$. Taking a seasonal difference can again help with making the data more stationary.
+
+  A seasonal ARIMA model has two components, the non-seasonal and seasonal, where they are both structurally the same. Each can have their own AR, MA and order of differencing parameters. Seasonal ARIMA models can be written as 
+  \begin{equation*}
+    ARIMA(p,d,q)\times(P,D,Q)_m
+  \end{equation*}
+  where $P$, $D$, and $Q$ are the seasonal AR (SAR) terms, seasonal differencing, and seasonal MA (SMA) terms respectively with $m$ being the period.
+
+  Let's use the monthly milk dataset as an example.
+
+  There is a clear rise and fall each year and the total increases each year. Since our data is in months, we will use $m = 12$.
+
+  Once again, Dr Nau has 2 rules in picking these parameters:
+  
+  \emph{\say{Rule 12: If the series has a strong and consistent seasonal pattern, then you should use an order of seasonal differencing--but never use more than one order of seasonal differencing or more than 2 orders of total differencing (seasonal+nonseasonal).}}
+
+  \emph{\say{Rule 13: If the autocorrelation at the seasonal period is positive, consider adding an SAR term to the model. If the autocorrelation at the seasonal period is negative, consider adding an SMA term to the model. Try to avoid mixing SAR and SMA terms in the same model, and avoid using more than one of either kind.}}
+
   \subsection{Exponential Smoothing}
   \subsubsection{Formulas}
   \subsubsection{Seasonal Variation}
