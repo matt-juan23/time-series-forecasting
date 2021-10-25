@@ -82,14 +82,14 @@ sorting=none
     \begin{figure}[H]
       \includegraphics[width=\linewidth]{data_both.png}
     \end{figure}
-    The most common is differencing. Differencing involves creating a new dataset where the values at time $t$ is equal to the difference between the original value at time $t$ and original value at $t-1$. So if $y$ is the new dataset and $Y$ is the original data, then
+    The most common is differencing. Differencing involves creating a new dataset where the values at time $t$ is equal to the difference between the original value at time $t$ and original value at $t-1$. So if $Y$ is the new dataset and $y$ is the original data, then
     \begin{equation*}
-      y_t = Y_t - Y_{t-1}.
+      Y_t = y_t - y_{t-1}.
     \end{equation*}
     Sometimes the differenced data will not make the data stationary enough and it may be necessary to difference the data again known as 2nd order differencing. This process is applicable to higher orders
-    Note, the 2nd order difference is not $y_t = Y_t - Y_{t-2}$ but it is the first differnce of the first difference so it comes out to
+    Note, the 2nd order difference is not $Y_t = y_t - y_{t-2}$ but it is the first differnce of the first difference so it comes out to
     \begin{equation*}
-      y_t = (Y_t - Y_{t-1}) - (Y_{t-1} - Y_{t-2}).
+      Y_t = (y_t - y_{t-1}) - (y_{t-1} - y_{t-2}).
     \end{equation*}
     The p-value from the ADF test is about $1.8 \times 10^{-10} < 0.05$ so the data is now stationary.
     \begin{figure}[H]
@@ -99,7 +99,7 @@ sorting=none
     Another common technique is to detrend by model fitting. You simply fit a regression model, such as linear or exponential, and create a new dataset where each value at time $t$ is equal to the difference between the original value and the predicted value.
     When fitted with a 2nd order polynomial regression model, the resulting differences produced a p-value of about $3.4 \times 10^{-10}< 0.05$ so again, the data is now stationary.
     \begin{equation*}
-      y_t = Y_t - pred_t.
+      Y_t = y_t - pred_t.
     \end{equation*}
     Again, the data is much more stationary than the original.
     \begin{figure}[H]
@@ -109,13 +109,40 @@ sorting=none
     There are various other techniques that can be performed and combined with one another to make your data more stationary.
     If your data has a seasonal pattern to it, seasonal differencing can be performed where you take the difference between $t$ and $t-\rho$ where $\rho$ is the period of your data.
     Non-linear transformations your dataset such as logging can also prove effective at making data stationary.
+  
   \newpage
+  
   \section{Time Series Forecasting Models}
     There are many types of forecasting models but this paper will look arguably the most popular two. ARIMA (Auto-Regressive Integrated Moving Average) and Exponential Smoothing models. 
+  
   \subsection{ARIMA}
     ARIMA is an extension of the ARMA or Box-Jenkin model popularised by George E. P. Box and Gwilym Jenkins in 1970. The main difference is that ARIMA simply allows for an extra parameter $d$ which defines how much differencing should be done before fitting the model, whereas ARMA assumes the data is stationary already. 
     ARIMA is actually a combination of two models, an autoregressive model (AR) and a moving averages model (MA). We will dive into what makes up both models and how ARIMA is able to effectively combine the two to create an even stronger model.
     As previously mentioned, a random variable in the form of a time series can be viewed as being a combination of signal and noise. The goal of ARIMA is to filter the noise and extrapolate the signal.
+  
+  \subsection{Backshift Notation}
+  Before we jump into defining what an ARIMA model is, there is a useful backshift operator $B$ denoting the time series lags,
+  \begin{equation*}
+    By_t = y_{t-1}.
+  \end{equation*}
+  $B$ effectively shifts that data back one time period. So naturally, two applications of $B$ shifts the data back two time periods. 
+  \begin{equation*}
+    B(By_t) = B^2y_t = y_{t-2}.
+  \end{equation*}
+  If we describe how differencing works using this notation it comes out to
+  \begin{equation*}
+    Y_t = y_t - y_{t-1} = y_t - By_t = (1 - B)y_t.
+  \end{equation*}
+  You will start to see a pattern when you take higher order differences. For second order,
+  \begin{equation*}
+    Y_t = (y_t - y_{t-1}) - (y_{t-1} - y_{t-2}) = (y_t - 2By_t + B^2y_t) = (1 - B)^2y_t.
+  \end{equation*}
+  In general, the $d$'th order of differencing is defined as 
+  \begin{equation*}
+    Y_t = (1 - B)^dy_t.
+  \end{equation*}
+  This notation is great as we can use $B$ is an algebraic manner which greatly simplifies some upcoming formulas.
+
   \subsubsection{Autoregressive Models}
     The term \emph{autoregressive} defines that the model uses a linear combination of previous values of a variable and learned predictors. This differs from a typical regression model which predicts based on a linear combination of the input features and learned predictors.
     Autoregressive models has one parameter $p$ which defines the order of the model. This parameter defines how many previous values influence the one being predicted. 
@@ -126,9 +153,11 @@ sorting=none
     where $\mu$ is the average period to period change and $\varepsilon_t$ is some white noise.
     An $AR(2)$ model uses the previous two timesteps as so on.
     Thus, an $AR(p)$ model can be generalised to
-    \begin{equation*}
-      y_t = \mu + \phi_1 y_{t-1} + \phi_2 y_{t-2} + ... + \phi_p y_{t-p} + \varepsilon_t.
-    \end{equation*}
+    \begin{gather*}
+      y_t = \mu + \phi_1 y_{t-1} + \phi_2 y_{t-2} + ... + \phi_p y_{t-p} + \varepsilon_t\\
+      \text{or in equivalent backshift notation}\\
+      (1 - \phi_1B - \phi_2B^2 - ... - \phi_pB^p)y_t = \mu + \varepsilon_t.
+    \end{gather*}
     We can see that we are using previous known values as the features to predict the future.
 
     Let's see how this works for the first differenced data we saw before. For my implementation, to estimate the parameters I used a linear least squares solver. Firstly, the lags are calculated and then we estimate parameters using these lags and our original time series values. We simply do a dot product between the coefficients and add it to our value for $\mu$ to retrieve our predictions. 
@@ -141,19 +170,23 @@ sorting=none
 
   \subsubsection{Moving Average Models}
     In a sort of similar manner, Moving Average (MA) models use the errors of past forecasts to predict. An MA model instead has parameter $q$ so an $MA(q)$ model can be written similarly as
-    \begin{equation*}
-      y_t = \mu + \varepsilon_t + \theta_1 \varepsilon_{t-1} + \theta_2 \varepsilon_{t-2} + ... + \theta_q \varepsilon_{t-q}.
-    \end{equation*}
+    \begin{gather*}
+      y_t = \mu + \varepsilon_t + \theta_1 \varepsilon_{t-1} + \theta_2 \varepsilon_{t-2} + ... + \theta_q \varepsilon_{t-q}\\
+      \text{or in equivalent backshift notation}\\
+      y_t = \mu + (1 + \theta_1B + \theta_2B^2 + ... + \theta_qB^q)\varepsilon_t.
+    \end{gather*}
     If your data is properly stationary, the error terms produced, $\varepsilon_t$, should form white noise and form a normal distribution with $0$ mean and $\sigma^2$ variance.
 
     Parameters were again estimated using a linear least squares solver and this is the results of a few $MA(q)$ models on the same data. Observe that the residuals produced do generally form a normal distribution with 0 mean.
 
   \subsubsection{Putting It All Together}
   When we combine differencing, an AR, and an MA model, we obtain an ARIMA model. It's general equation is as follows
-  \begin{equation*}
-    y_t' = \mu + \phi_1 y_{t-1}' + ... + \phi_p y_{t-p}' + \theta_1 \varepsilon_{t-1}' + ... + \theta_q \varepsilon_{t-q}' + \varepsilon_t
-  \end{equation*}
-  where $y_t'$ is the differenced data.
+  \begin{gather*}
+    y_t' = \mu + \phi_1 y_{t-1}' + ... + \phi_p y_{t-p}' + \theta_1 \varepsilon_{t-1}' + ... + \theta_q \varepsilon_{t-q}' + \varepsilon_t\\
+    \text{or in equivalent backshift notation}\\
+    (1 - \phi_1B - ... - \phi_pB^p)(1-B)^dy_t = \mu + (1 + \theta_1B + ... + \theta_qB^q)\varepsilon_t.
+  \end{gather*}
+  where $y_t'$ is the differenced data. Note that the backshift notation already takes into account the order of differencing $d$ in its equation.
 
   An ARIMA model has 3 parameters and can fully be expressed as ARIMA$(p,d,q)$.
   \begin{itemize}
@@ -165,7 +198,18 @@ sorting=none
 
   Running through a list of parameters, we can see effects of different values for the parameters.
 
+  \subsubsection{Forecasting}
+  So far, we have shown how to fit an ARIMA model on a well-defined time series. But we have not gone into how it forecasts unseen data. It is quite simple and involves 3 steps:
+  \begin{enumerate}
+    \item Convert the model's ARIMA equation from backshift notation to the equation where $y_t$ is the only term on the left side of the equation
+    \item Replace $t$ with $T+S$ where $S$ is the number of future time steps
+    \item Replace future observations with their predicted forecasts and future errors to zero
+  \end{enumerate}
+  Let's try this with an example using an ARIMA(2,1,2) model as an example. 
+
   \subsubsection{Model Scoring}
+  TENTATIVE!!!!
+
   There are a few ways to score our model to determine how well it performs on unseen data. The way we will score our models is using Akaine's Information Criteria. It can be written as 
 
   \begin{equation*}
