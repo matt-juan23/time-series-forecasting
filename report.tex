@@ -22,7 +22,7 @@ sorting=none
 \date{}
 \begin{document}
   \maketitle
-
+  \begin{flushleft}
   \newpage
   \doublespacing
   \tableofcontents
@@ -112,15 +112,15 @@ sorting=none
   
   \newpage
   
-  \section{Time Series Forecasting Models}
-    There are many types of forecasting models but this paper will look arguably the most popular two. ARIMA (Auto-Regressive Integrated Moving Average) and Exponential Smoothing models. 
+  \section{Non-seasonal Forecasting Models}
+    There are many types of forecasting models but this paper will look two types. ARIMA (Auto-Regressive Integrated Moving Average) and Exponential Smoothing models. 
   
   \subsection{ARIMA}
     ARIMA is an extension of the ARMA or Box-Jenkin model popularised by George E. P. Box and Gwilym Jenkins in 1970. The main difference is that ARIMA simply allows for an extra parameter $d$ which defines how much differencing should be done before fitting the model, whereas ARMA assumes the data is stationary already. 
     ARIMA is actually a combination of two models, an autoregressive model (AR) and a moving averages model (MA). We will dive into what makes up both models and how ARIMA is able to effectively combine the two to create an even stronger model.
     As previously mentioned, a random variable in the form of a time series can be viewed as being a combination of signal and noise. The goal of ARIMA is to filter the noise and extrapolate the signal.
   
-  \subsection{Backshift Notation}
+  \subsubsection{Backshift Notation}
   Before we jump into defining what an ARIMA model is, there is a useful backshift operator $B$ denoting the time series lags,
   \begin{equation*}
     By_t = y_{t-1}.
@@ -201,12 +201,42 @@ sorting=none
   \subsubsection{Forecasting}
   So far, we have shown how to fit an ARIMA model on a well-defined time series. But we have not gone into how it forecasts unseen data. It is quite simple and involves 3 steps:
   \begin{enumerate}
-    \item Convert the model's ARIMA equation from backshift notation to the equation where $y_t$ is the only term on the left side of the equation
-    \item Replace $t$ with $T+S$ where $S$ is the number of future time steps
-    \item Replace future observations with their predicted forecasts and future errors to zero
+    \item Expand the model's ARIMA backshift equation and group by the powers of B
+    \item Convert to equation with only $y_t$'s and move all terms that isn't $y_t$ to the right side of the equation
+    \item Replace $t$ with $T+1$ is the number of future time steps and update time series with predicted value
   \end{enumerate}
-  Let's try this with an example using an ARIMA(2,1,2) model as an example. 
+  Let's try this with an example using an ARIMA(2,1,2) model as an example. In backshift notation, the model is written as
+  \begin{equation*}
+    (1 - \phi_1B - \phi_2B^2)(1-B)y_t = \mu + (1 + \sigma_1B + \sigma_2B^2)\varepsilon_t.
+  \end{equation*}
+  Using step 1, we expand and group:
+  \begin{align*}
+    (1 - B - \phi_1B + \phi_1B^2 - \phi_2B^2 + \phi_2B^3)y_t &= \mu + (1 + \sigma_1B + \sigma_2B^2)\varepsilon_t\\
+    [1 - (1 + \phi_1)B - (\phi_2 - \phi_1)B^2 + \phi_2B^3]y_t &= \mu + (1 + \sigma_1B + \sigma_2B^2)\varepsilon_t.
+  \end{align*}
 
+  With second step, we convert giving
+  \begin{equation*}
+    y_t - (1 + \phi_1)y_{t-1} - (\phi_2 - \phi_1)y_{t-2} + \phi_2y_{t-3} = \mu + \varepsilon_t + \sigma_1\varepsilon_{t-1} + \sigma_2\varepsilon_{t-2},
+  \end{equation*}
+  and moving terms we obtain
+  \begin{equation*}
+        y_t = \mu + (1 + \phi_1)y_{t-1} + (\phi_2 - \phi_1)y_{t-2} - \phi_2y_{t-3} + \varepsilon_t + \sigma_1\varepsilon_{t-1} + \sigma_2\varepsilon_{t-2}.
+  \end{equation*}
+
+  Third step is to replace $t$ with $T+1$:
+  \begin{equation*}
+    y_{T+1} = \mu + (1 + \phi_1)y_{T} + (\phi_2 - \phi_1)y_{T-1} - \phi_2y_{T-2} + \varepsilon_{T} + \sigma_1\varepsilon_{T-1} + \sigma_2\varepsilon_{T-2}.
+  \end{equation*}
+  Looking at the right side, there are unusual $\varepsilon_T$ and $\varepsilon_{T-1}$ terms. These values are impossible to know so the $\varepsilon_T$ term gets set to 0 and $\varepsilon_{T-1}$ is replaced with the last known error term. This gives us with a final equation of 
+  \begin{equation*}
+    y_{T+1} = \mu + (1 + \phi_1)y_{T} + (\phi_2 - \phi_1)y_{T-1} - \phi_2y_{T-2} + \sigma_1\varepsilon_{T-1} + \sigma_2\varepsilon_{T-2}.
+  \end{equation*}
+  To predict further into the future say at time $T+2$, then just repeat step 3 which produces
+  \begin{equation*}
+    y_{T+2} = \mu + (1 + \phi_1)y_{T+1} + (\phi_2 - \phi_1)y_{T} - \phi_2y_{T-1} + \sigma_2\varepsilon_{T-1}.
+  \end{equation*}
+  Observe that there should be a $\sigma_1\varepsilon_{T}$ term but since we set the time series value at $T$ to be equal to the predicted value, this error term evaluates to 0. Hence, if you predict $S > q$ future time steps, then all MA terms disappear. 
   \subsubsection{Model Scoring}
   TENTATIVE!!!!
 
@@ -239,7 +269,7 @@ sorting=none
 
   Here, we can see that rule 1 no longer applies and rule 2 is applied. Observe that the lag-1 autocorrelation does go negative so a good choice would be $d=1$. Note that the value is less than $-0.5$ which the rule warns us of overdifferencing so we will compare the results of an $ARIMA(0,0,0)$ model to an $ARIMA(0,1,0)$ to see which one performs better. 
 
-  Clearly, $ARIMA(0,1,0)$ is the better performer so $d=1$ is a good choice.
+  Clearly, $ARIMA(0,1,0)$ is the better performer so $d=1$ is a good choice. Using this method can be preferred over the trial and error method with the ADF test if we only care about differencing our data.
   
   By looking at the ACF and PACF plots of a stationary series, we can generally identify the numbers of AR and/or MA terms that are needed. Dr Nau has identified more rules in identifying these values.
   
@@ -253,34 +283,32 @@ sorting=none
 
   Running this through a parameter optimiser, it gives back a parameter list of $(1,1,2)$ so our estimation was pretty close and shows that these rules are not absolute.
   
-  \subsubsection{Seasonal Variation}
-  Many time series data in the real work exhibit some form of seasonality. These could include higher network traffic during peak hours of the day or increased spending during Christmas. In such cases, we need to take differences greater than 1 known as the seasonal difference. For example, if there are 12 periods in a season, the seasonal diffence is $y_t = Y_t - Y_{t-12}$. Taking a seasonal difference can again help with making the data more stationary.
+  \subsection{Exponential Smoothing}
+  
+  \section{Seasonal models}
+  Many time series data in the real work exhibit some form of seasonality. These could include higher network traffic during peak hours of the day or increased spending during Christmas. In such cases, we need to take differences greater than 1 known as the seasonal difference. For example, if there are 12 periods in a season, the seasonal diffence is $y_t = Y_t - Y_{t-12}$. Combined with non-seasonal taking a seasonal difference can in some instances help make the data stationary. We will again explore the ARIMA and Exponential Smoothing algorithms and how they were extended to account for seasonality. For these examples, we will use the monthly milk dataset.
 
-  A seasonal ARIMA model has two components, the non-seasonal and seasonal, where they are both structurally the same. Each can have their own AR, MA and order of differencing parameters. Seasonal ARIMA models can be written as 
+  There is a clear rise and fall each year and the total increases each year.
+
+  \subsection{Seasonal ARIMA}
+  If non-seasonal ARIMA wasn't complicated enough, there exists a seasonal extension which introduces 3 new parameters. A seasonal ARIMA model has two components, non-seasonal and seasonal, which are both structurally the same. Each can have their own AR, MA and order of differencing parameters. Seasonal ARIMA models can be written as 
   \begin{equation*}
     ARIMA(p,d,q)\times(P,D,Q)_m
   \end{equation*}
-  where $P$, $D$, and $Q$ are the seasonal AR (SAR) terms, seasonal differencing, and seasonal MA (SMA) terms respectively with $m$ being the period.
+  where $P$, $D$, and $Q$ are the seasonal AR (SAR) terms, seasonal differencing order, and seasonal MA (SMA) terms respectively with $m$ being the period.
 
-  Let's use the monthly milk dataset as an example.
+  Using the milk data, we pick $m = 12$ since the data is monthly.
+  First let's figure out our order of non-seasonal and seasonal orders of differencing. We can first try 1 order of seasonal differencing and looking at the ACF and PACF graphs.
 
-  There is a clear rise and fall each year and the total increases each year. Since our data is in months, we will use $m = 12$.
+  The slow decrease in the ACF signifies and p-value $>=0.05$ indicates that we need more orders of differencing. This time we will try include a non-seasonal difference.
+
+  This looks a lot better. With a p-value $<0.05$ we can be happy with our orders of differencing being $d=1$ and $D=1$. Note that the order in which you difference the series, either seasonal or non-seasonal first, does not make a difference to the final differenced series.
 
   Once again, Dr Nau has 2 rules in picking these parameters:
   
   \emph{\say{Rule 12: If the series has a strong and consistent seasonal pattern, then you should use an order of seasonal differencing--but never use more than one order of seasonal differencing or more than 2 orders of total differencing (seasonal+nonseasonal).}}
 
   \emph{\say{Rule 13: If the autocorrelation at the seasonal period is positive, consider adding an SAR term to the model. If the autocorrelation at the seasonal period is negative, consider adding an SMA term to the model. Try to avoid mixing SAR and SMA terms in the same model, and avoid using more than one of either kind.}}
-
-  \subsection{Exponential Smoothing}
-  \subsubsection{Formulas}
-  \subsubsection{Seasonal Variation}
-
-  \section{Implementation}
-  \subsection{ARIMA}
-  \subsection{Exponential Smoothing}
-
-  \section{Results}
 
   \section{Conclusion}
 
@@ -290,5 +318,5 @@ sorting=none
 
   bibliography\cite{articleFactCheck}
   \printbibliography
-
+  \end{flushleft}
 \end{document}
