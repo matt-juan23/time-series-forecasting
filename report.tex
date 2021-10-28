@@ -7,6 +7,7 @@
 \usepackage{subcaption}
 \usepackage{hyperref}
 \usepackage{graphicx}
+\usepackage{caption}
 \usepackage{float}
 \usepackage{dirtytalk}
 
@@ -22,7 +23,7 @@ sorting=none
 \date{}
 \begin{document}
   \maketitle
-  \begin{flushleft}
+  % \begin{flushleft}
   \newpage
   \doublespacing
   \tableofcontents
@@ -71,6 +72,7 @@ sorting=none
   \begin{figure}[H]
     \centering
     \includegraphics[scale=0.8]{stationary_time_series.png}
+    \caption{}
   \end{figure}
 
   \subsubsection{How to test for stationarity}
@@ -81,6 +83,7 @@ sorting=none
     The data here has a distinct multiplicative increasing trend and is clearly non stationary. Using the ADF test, the p-value comes out to $1>0.05$ so there is weak evidence against the null hypothesis so the data is non-stationary.
     \begin{figure}[H]
       \includegraphics[width=\linewidth]{data_both.png}
+      \caption{}
     \end{figure}
     The most common is differencing. Differencing involves creating a new dataset where the values at time $t$ is equal to the difference between the original value at time $t$ and original value at $t-1$. So if $Y$ is the new dataset and $y$ is the original data, then
     \begin{equation*}
@@ -95,6 +98,7 @@ sorting=none
     \begin{figure}[H]
       \centering
       \includegraphics[width=\linewidth]{diff_both.png}
+      \caption{}
     \end{figure}
     Another common technique is to detrend by model fitting. You simply fit a regression model, such as linear or exponential, and create a new dataset where each value at time $t$ is equal to the difference between the original value and the predicted value.
     When fitted with a 2nd order polynomial regression model, the resulting differences produced a p-value of about $3.4 \times 10^{-10}< 0.05$ so again, the data is now stationary.
@@ -105,6 +109,7 @@ sorting=none
     \begin{figure}[H]
       \centering
       \includegraphics[width=\linewidth]{reg_both.png}
+      \caption{}
     \end{figure}
     There are various other techniques that can be performed and combined with one another to make your data more stationary.
     If your data has a seasonal pattern to it, seasonal differencing can be performed where you take the difference between $t$ and $t-\rho$ where $\rho$ is the period of your data.
@@ -112,13 +117,13 @@ sorting=none
   
   \newpage
   
-  \section{Non-seasonal Forecasting Models}
-    There are many types of forecasting models but this paper will look two types. ARIMA (Auto-Regressive Integrated Moving Average) and Exponential Smoothing models. 
+  \section{Non-Seasonal Forecasting Models}
+    There are many types of forecasting models but this paper will look two types. ARIMA (Auto-Regressive Integrated Moving Average) and Exponential \\Smoothing models. For these models, we will use the Shampoo Sales dataset shown previously.
   
   \subsection{ARIMA}
     ARIMA is an extension of the ARMA or Box-Jenkin model popularised by George E. P. Box and Gwilym Jenkins in 1970. The main difference is that ARIMA simply allows for an extra parameter $d$ which defines how much differencing should be done before fitting the model, whereas ARMA assumes the data is stationary already. 
-    ARIMA is actually a combination of two models, an autoregressive model (AR) and a moving averages model (MA). We will dive into what makes up both models and how ARIMA is able to effectively combine the two to create an even stronger model.
-    As previously mentioned, a random variable in the form of a time series can be viewed as being a combination of signal and noise. The goal of ARIMA is to filter the noise and extrapolate the signal.
+    ARIMA is actually a combination of three components, an autoregressive model (AR), a moving averages model (MA), and an integrated (I) part denoting the previously mentioned differencing. We will dive into what makes up AR and MA models and how ARIMA is able to effectively combine the two.
+    As previously discussed, a random variable in the form of a time series can be viewed as being a combination of signal and noise. The goal of ARIMA is to filter the noise and extrapolate the signal.
   
   \subsubsection{Backshift Notation}
   Before we jump into defining what an ARIMA model is, there is a useful backshift operator $B$ denoting the time series lags,
@@ -126,17 +131,22 @@ sorting=none
     By_t = y_{t-1}.
   \end{equation*}
   $B$ effectively shifts that data back one time period. So naturally, two applications of $B$ shifts the data back two time periods. 
-  \begin{equation*}
-    B(By_t) = B^2y_t = y_{t-2}.
-  \end{equation*}
+  \begin{align*}
+    B(By_t) &= B^2y_t \\
+    &= y_{t-2}.
+  \end{align*}
   If we describe how differencing works using this notation it comes out to
-  \begin{equation*}
-    Y_t = y_t - y_{t-1} = y_t - By_t = (1 - B)y_t.
-  \end{equation*}
+  \begin{align*}
+    Y_t &= y_t - y_{t-1} \\
+    &= y_t - By_t \\
+    &= (1 - B)y_t.
+  \end{align*}
   You will start to see a pattern when you take higher order differences. For second order,
-  \begin{equation*}
-    Y_t = (y_t - y_{t-1}) - (y_{t-1} - y_{t-2}) = (y_t - 2By_t + B^2y_t) = (1 - B)^2y_t.
-  \end{equation*}
+  \begin{align*}
+    Y_t &= (y_t - y_{t-1}) - (y_{t-1} - y_{t-2}) \\
+    &= (y_t - 2By_t + B^2y_t) \\
+    &= (1 - B)^2y_t.
+  \end{align*}
   In general, the $d$'th order of differencing is defined as 
   \begin{equation*}
     Y_t = (1 - B)^dy_t.
@@ -146,13 +156,13 @@ sorting=none
   \subsubsection{Autoregressive Models}
     The term \emph{autoregressive} defines that the model uses a linear combination of previous values of a variable and learned predictors. This differs from a typical regression model which predicts based on a linear combination of the input features and learned predictors.
     Autoregressive models has one parameter $p$ which defines the order of the model. This parameter defines how many previous values influence the one being predicted. 
-    An $AR(1)$ model is simply defines a model in which the predicted value is equal to some linear combination of the value at the previous time step
+    An AR$(1)$ model is simply defines a model in which the predicted value is equal to some linear combination of the value at the previous time step
     \begin{equation*}
       y_t = \mu + \phi_1 y_{t-1} + \varepsilon_t,
     \end{equation*}
     where $\mu$ is the average period to period change and $\varepsilon_t$ is some white noise.
-    An $AR(2)$ model uses the previous two timesteps as so on.
-    Thus, an $AR(p)$ model can be generalised to
+    An AR$(2)$ model uses the previous two timesteps as so on.
+    Thus, an AR$(p)$ model can be generalised to
     \begin{gather*}
       y_t = \mu + \phi_1 y_{t-1} + \phi_2 y_{t-2} + ... + \phi_p y_{t-p} + \varepsilon_t\\
       \text{or in equivalent backshift notation}\\
@@ -160,24 +170,41 @@ sorting=none
     \end{gather*}
     We can see that we are using previous known values as the features to predict the future.
 
-    Let's see how this works for the first differenced data we saw before. For my implementation, to estimate the parameters I used a linear least squares solver. Firstly, the lags are calculated and then we estimate parameters using these lags and our original time series values. We simply do a dot product between the coefficients and add it to our value for $\mu$ to retrieve our predictions. 
+    Let's see how this works for the first differenced data. For my implementation, to estimate the parameters I used a linear least squares solver. Firstly, the lags are calculated and then we estimate parameters using these lags and our original time series values. We simply do a dot product between the coefficients and add it to our value for $\mu$ to retrieve our predictions. 
     
-    This is the resulting predictions of a few $AR(p)$ models.
+    This is the resulting predictions of a few AR$(p)$ models.
 
-    There isn't too much change apart from the beginning of the data series where no lags could be properly calculated so they were filled with 0.
+    \begin{figure}[H]
+      \centering
+      \captionsetup{justification=centering}
+      \begin{subfigure}[b]{0.49\linewidth}
+        \includegraphics[width=\linewidth]{AR_1.png}
+        \caption{AR(1)}
+      \end{subfigure}
+      \begin{subfigure}[b]{0.49\linewidth}
+        \includegraphics[width=\linewidth]{AR_2.png}
+        \caption{AR(2)}
+      \end{subfigure}
+      \caption{Two types of AR models. AR(1) on left estimated $\phi_1 = -0.70874876$. AR(2) on right estimated $\phi_1 = -0.87619131, \phi_2 = -0.23067302$}
+    \end{figure}
 
-    The already known lags are used to forecast one time step ahead. This forecast is then assumed to be the observed value and further values can be forecasted in a similar manner.
+    Observe that there are subtle changes between the two. If we kept on increasing the AR term, our model would fit this data extremely well. In machine learning, this is commonly known as overfitting and future forecasts can be very inaccurate.
 
   \subsubsection{Moving Average Models}
-    In a sort of similar manner, Moving Average (MA) models use the errors of past forecasts to predict. An MA model instead has parameter $q$ so an $MA(q)$ model can be written similarly as
+    In a sort of similar manner, Moving Average (MA) models use the errors of past forecasts to predict. An MA model instead has parameter $q$ so an MA$(q)$ model can be written similarly as
     \begin{gather*}
       y_t = \mu + \varepsilon_t + \theta_1 \varepsilon_{t-1} + \theta_2 \varepsilon_{t-2} + ... + \theta_q \varepsilon_{t-q}\\
       \text{or in equivalent backshift notation}\\
       y_t = \mu + (1 + \theta_1B + \theta_2B^2 + ... + \theta_qB^q)\varepsilon_t.
     \end{gather*}
-    If your data is properly stationary, the error terms produced, $\varepsilon_t$, should form white noise and form a normal distribution with $0$ mean and $\sigma^2$ variance.
-
-    Parameters were again estimated using a linear least squares solver and this is the results of a few $MA(q)$ models on the same data. Observe that the residuals produced do generally form a normal distribution with 0 mean.
+    If your data is properly stationary, the error terms produced, $\varepsilon_t$, should form white noise and form a normal distribution with $0$ mean and $\theta^2$ variance.
+    
+    \begin{figure}[H]
+      \centering
+      \captionsetup{justification=centering}
+      \includegraphics[width=\linewidth]{residuals.png}
+      \caption{Error terms used for MA(1) are generally centered around 0 with $\theta \approx 109.2613$. Increased number of datapoints or more stationary series would make this more apparent.}
+    \end{figure}
 
   \subsubsection{Putting It All Together}
   When we combine differencing, an AR, and an MA model, we obtain an ARIMA model. It's general equation is as follows
@@ -188,15 +215,37 @@ sorting=none
   \end{gather*}
   where $y_t'$ is the differenced data. Note that the backshift notation already takes into account the order of differencing $d$ in its equation.
 
-  An ARIMA model has 3 parameters and can fully be expressed as ARIMA$(p,d,q)$.
+  An ARIMA model has 3 parameters and can be expressed as ARIMA$(p,d,q)$.
   \begin{itemize}
     \item $p$ is order of autoregressive component
     \item $d$ is the order of differencing to be performed on the data
     \item $q$ is the order of moving averages component
   \end{itemize}
-  This generalised model is great since we don't have to difference the data ourselves and allows for the combination of $AR(p)$ and $MA(q)$ models. The implementation of this is quite simple as you just have to add the results of the AR and MA components together.
+  This generalised model is great since we don't have to difference the data ourselves and allows for the combination of AR$(p)$ and MA$(q)$ models. The implementation of this is quite simple as you just have to add the results of the AR and MA components together.
 
   Running through a list of parameters, we can see effects of different values for the parameters.
+
+  \begin{figure}[H]
+    \centering
+    \captionsetup{justification=centering}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{ARIMA_010.png}
+      \caption{ARIMA$(0, 1, 0)$}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{ARIMA_111.png}
+      \caption{ARIMA$(1, 1, 1)$}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{ARIMA_311.png}
+      \caption{ARIMA$(3, 1, 1)$}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{ARIMA_113.png}
+      \caption{ARIMA$(1, 1, 3)$}
+    \end{subfigure}
+    \caption{Apart from $p=0, q=0$, the number of $p$ and $q$ terms don't matter a whole lot for fitting the data but we will see what happens to forecasting the data.}
+  \end{figure}
 
   \subsubsection{Forecasting}
   So far, we have shown how to fit an ARIMA model on a well-defined time series. But we have not gone into how it forecasts unseen data. It is quite simple and involves 3 steps:
@@ -207,86 +256,119 @@ sorting=none
   \end{enumerate}
   Let's try this with an example using an ARIMA(2,1,2) model as an example. In backshift notation, the model is written as
   \begin{equation*}
-    (1 - \phi_1B - \phi_2B^2)(1-B)y_t = \mu + (1 + \sigma_1B + \sigma_2B^2)\varepsilon_t.
+    (1 - \phi_1B - \phi_2B^2)(1-B)y_t = \mu + (1 + \theta_1B + \theta_2B^2)\varepsilon_t.
   \end{equation*}
   Using step 1, we expand and group:
   \begin{align*}
-    (1 - B - \phi_1B + \phi_1B^2 - \phi_2B^2 + \phi_2B^3)y_t &= \mu + (1 + \sigma_1B + \sigma_2B^2)\varepsilon_t\\
-    [1 - (1 + \phi_1)B - (\phi_2 - \phi_1)B^2 + \phi_2B^3]y_t &= \mu + (1 + \sigma_1B + \sigma_2B^2)\varepsilon_t.
+    (1 - B - \phi_1B + \phi_1B^2 - \phi_2B^2 + \phi_2B^3)y_t &= \mu + (1 + \theta_1B + \theta_2B^2)\varepsilon_t\\
+    [1 - (1 + \phi_1)B - (\phi_2 - \phi_1)B^2 + \phi_2B^3]y_t &= \mu + (1 + \theta_1B + \theta_2B^2)\varepsilon_t.
   \end{align*}
 
-  With second step, we convert giving
-  \begin{equation*}
-    y_t - (1 + \phi_1)y_{t-1} - (\phi_2 - \phi_1)y_{t-2} + \phi_2y_{t-3} = \mu + \varepsilon_t + \sigma_1\varepsilon_{t-1} + \sigma_2\varepsilon_{t-2},
-  \end{equation*}
-  and moving terms we obtain
-  \begin{equation*}
-        y_t = \mu + (1 + \phi_1)y_{t-1} + (\phi_2 - \phi_1)y_{t-2} - \phi_2y_{t-3} + \varepsilon_t + \sigma_1\varepsilon_{t-1} + \sigma_2\varepsilon_{t-2}.
-  \end{equation*}
+  With second step, we convert and move terms we obtain giving
+  \begin{gather*}
+    y_t - (1 + \phi_1)y_{t-1} - (\phi_2 - \phi_1)y_{t-2} + \phi_2y_{t-3} = \mu + \varepsilon_t + \theta_1\varepsilon_{t-1} + \theta_2\varepsilon_{t-2},\\
+    y_t = \mu + (1 + \phi_1)y_{t-1} + (\phi_2 - \phi_1)y_{t-2} - \phi_2y_{t-3} + \varepsilon_t + \theta_1\varepsilon_{t-1} + \theta_2\varepsilon_{t-2}.
+  \end{gather*}
 
   Third step is to replace $t$ with $T+1$:
   \begin{equation*}
-    y_{T+1} = \mu + (1 + \phi_1)y_{T} + (\phi_2 - \phi_1)y_{T-1} - \phi_2y_{T-2} + \varepsilon_{T} + \sigma_1\varepsilon_{T-1} + \sigma_2\varepsilon_{T-2}.
+    y_{T+1} = \mu + (1 + \phi_1)y_{T} + (\phi_2 - \phi_1)y_{T-1} - \phi_2y_{T-2} + \varepsilon_{T} + \theta_1\varepsilon_{T-1} + \theta_2\varepsilon_{T-2}.
   \end{equation*}
   Looking at the right side, there are unusual $\varepsilon_T$ and $\varepsilon_{T-1}$ terms. These values are impossible to know so the $\varepsilon_T$ term gets set to 0 and $\varepsilon_{T-1}$ is replaced with the last known error term. This gives us with a final equation of 
   \begin{equation*}
-    y_{T+1} = \mu + (1 + \phi_1)y_{T} + (\phi_2 - \phi_1)y_{T-1} - \phi_2y_{T-2} + \sigma_1\varepsilon_{T-1} + \sigma_2\varepsilon_{T-2}.
+    y_{T+1} = \mu + (1 + \phi_1)y_{T} + (\phi_2 - \phi_1)y_{T-1} - \phi_2y_{T-2} + \theta_1\varepsilon_{T-1} + \theta_2\varepsilon_{T-2}.
   \end{equation*}
   To predict further into the future say at time $T+2$, then just repeat step 3 which produces
   \begin{equation*}
-    y_{T+2} = \mu + (1 + \phi_1)y_{T+1} + (\phi_2 - \phi_1)y_{T} - \phi_2y_{T-1} + \sigma_2\varepsilon_{T-1}.
+    y_{T+2} = \mu + (1 + \phi_1)y_{T+1} + (\phi_2 - \phi_1)y_{T} - \phi_2y_{T-1} + \theta_2\varepsilon_{T-1}.
   \end{equation*}
-  Observe that there should be a $\sigma_1\varepsilon_{T}$ term but since we set the time series value at $T$ to be equal to the predicted value, this error term evaluates to 0. Hence, if you predict $S > q$ future time steps, then all MA terms disappear. 
-  \subsubsection{Model Scoring}
-  TENTATIVE!!!!
+  Observe that there should be a $\theta_1\varepsilon_{T}$ term but since we set the time series value at $T$ to be equal to the predicted value, this error term evaluates to 0. We are essentially taking our predicted value as the truth which is why all the error terms eventually become negligible. Hence, if you predict $S > q$ future time steps, all MA terms disappear. 
 
-  There are a few ways to score our model to determine how well it performs on unseen data. The way we will score our models is using Akaine's Information Criteria. It can be written as 
-
-  \begin{equation*}
-    AIC = -2ln(L) + 2(p + q + k + 1),
-  \end{equation*}
-  where $L$ is the likelihood of the data, $k = 1$ if $\mu \ne 0$ and $k = 0$ if $\mu = 0$. In our case, $L$ will be defined as the sum of squares of the errors, namely,
-
-  \begin{equation*}
-    L = \sum_{t=1}^{T} \varepsilon_t^2.
-  \end{equation*}
+  \begin{figure}[H]
+    \centering
+    \captionsetup{justification=centering}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{forecast_ARIMA_010.png}
+      \caption{ARIMA$(0, 1, 0)$}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{forecast_ARIMA_111.png}
+      \caption{ARIMA$(1, 1, 1)$}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{forecast_ARIMA_110.png}
+      \caption{ARIMA$(1, 1, 0)$}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{forecast_ARIMA_011.png}
+      \caption{ARIMA$(0, 1, 1)$}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{forecast_ARIMA_311.png}
+      \caption{ARIMA$(3, 1, 1)$}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{forecast_ARIMA_113.png}
+      \caption{ARIMA$(1, 1, 3)$}
+    \end{subfigure}
+    \caption{Forecasting for 15 future time steps from different ARIMA models. (c) and (d) are equivalent to an AR(1) and MA(1) with 1 order of differencing.}
+  \end{figure}
 
   \subsubsection{Order Choosing}
-  Up until now, we have been manually setting the parameters $p$, $d$, and $q$ seemingly by observing which model fits the best. However, there are systematic methods of narrowing down the search space. This is where we look at the autocorrelation function (ACF) plots and partial autocorrelation (PACF) plots to help determine our optimal parameters. Autocorrelation is a way of measuring the similarity between values in a time series and their past. An autocorrelation of $+1+$ means that there is a perfect positive correlation while $-1$ represents a perfect negative correlation. Partial autocorrelation is similar to autocorrelation but slightly more complicated to compute. PACF again measures similarity between $y_t$ and $y_{t-\Delta}$ but adjusts for the presence of the other terms of short lag ($y_{t-1}, y_{t-2},...,y_{t-\Delta-1}$).
-  Here is the ACF and PACF plots of our non-differenced and once differenced data.
+  Up until now, we have been manually setting the parameters $p$, $d$, and $q$ seemingly by observing which model fits the best. However, there are systematic methods of narrowing down the search space. This is where we look at the autocorrelation function (ACF) plots and partial autocorrelation (PACF) plots to help determine our optimal parameters. Autocorrelation is a way of measuring the similarity between values in a time series and their past. An autocorrelation of $+1$ means that there is a perfect positive correlation while $-1$ represents a perfect negative correlation. Partial autocorrelation is similar to autocorrelation but slightly more complicated to compute. PACF again measures similarity between $y_t$ and $y_{t-\Delta}$ but adjusts for the presence of the other terms of short lag ($y_{t-1}, y_{t-2},...,y_{t-\Delta-1}$).
 
-  In a perfect scenario, we would want no correlation between the series and the lags of itself. Of course, this is almost impossible to achieve so having the spikes fall inside the blue region is close to good enough. 
+  \begin{figure}[H]
+    \centering
+    \captionsetup{justification=centering}
+    \begin{subfigure}[b]{\linewidth}
+      \includegraphics[width=\linewidth]{acf_pacf_data.png}
+      \caption{ACF and PACF of undifferenced data}
+    \end{subfigure}
+    \begin{subfigure}[b]{\linewidth}
+      \includegraphics[width=\linewidth]{acf_pacf_first.png}
+      \caption{ACF and PACF of order 1 differenced data}
+    \end{subfigure}
+    \caption{ACF and PACF plots of our non-differenced and once differenced data}
+  \end{figure}
+
+  In a perfect scenario, we would want no correlation between the series and the lags of itself. Of course, this is almost impossible to achieve so the blue region highlights where we wish our spikes to lie. 
 
   Firstly, we have to choose the order of differencing. It is not sufficient to say that because a once differenced series is stationary then that should be the order. Higher order differencing may produce better results. This is where we look at the autocorrelation function (ACF) plot to help pick the value for $d$. 
 
   Duke University professor, Dr Robert Nau presents a few rules for interpreting these graphs and how to estimate the optimal value for $d$.
+  \newline
+  \newline
+  \emph{\say{Rule 1: If the series has positive autocorrelations out to a high number of lags (say, 10 or more), then it probably needs a higher order of differencing.}\\
+  \say{Rule 2: If the lag-1 autocorrelation is zero or negative, or the autocorrelations are all small and patternless, then the series does not need a higher order of differencing. If the lag-1 autocorrelation is -0.5 or more negative, the series may be overdifferenced.  BEWARE OF OVERDIFFERENCING.}\\
+  Dr Robert Nau, Statistical Forecasting}
+  \newline
 
-  \emph{\say{Rule 1: If the series has positive autocorrelations out to a high number of lags (say, 10 or more), then it probably needs a higher order of differencing.}}
+  Looking at the ACF plot for our original data, it mostly stays positive until around lag 11 so by rule 1, we should difference at least once. We can see that rule 1 no longer applies and rule 2 is applied. Observe that the lag-1 autocorrelation does go negative so a good choice would be $d=1$. Note that the value is less than $-0.5$ which the rule warns us of overdifferencing. However, previously we looked at the ADF tests for differenced and non-differenced and it was clear that differencing was required so $d=1$ is a good choice.
 
-  \emph{\say{Rule 2: If the lag-1 autocorrelation is zero or negative, or the autocorrelations are all small and patternless, then the series does not need a higher order of differencing. If the lag-1 autocorrelation is -0.5 or more negative, the series may be overdifferenced.  BEWARE OF OVERDIFFERENCING.}}
-
-  Looking at the ACF plot for our original data, it mostly stays positive until around lag 11 so by rule 1, we should difference at least once.
-
-  Here, we can see that rule 1 no longer applies and rule 2 is applied. Observe that the lag-1 autocorrelation does go negative so a good choice would be $d=1$. Note that the value is less than $-0.5$ which the rule warns us of overdifferencing so we will compare the results of an $ARIMA(0,0,0)$ model to an $ARIMA(0,1,0)$ to see which one performs better. 
-
-  Clearly, $ARIMA(0,1,0)$ is the better performer so $d=1$ is a good choice. Using this method can be preferred over the trial and error method with the ADF test if we only care about differencing our data.
-  
+  Using this method can be preferred over the trial and error method with the ADF test if we only care about differencing our data.\\
   By looking at the ACF and PACF plots of a stationary series, we can generally identify the numbers of AR and/or MA terms that are needed. Dr Nau has identified more rules in identifying these values.
-  
-  \emph{\say{Rule 6: If the partial autocorrelation function (PACF) of the differenced series displays a sharp cutoff and/or the lag-1 autocorrelation is positive, then consider adding one or more AR terms to the model. The lag which the PACF cuts off is the indicated number of AR terms.}}
-
-  \emph{\say{Rule 7: If the autocorrelation function (ACF) of the differenced series displays a sharp cutoff and/or the lag-1 autocorrelation is negative, then consider adding an MA term to the model. The lag which the ACF cuts off is the indicated number of MA terms.}}
+  \newline
+  \newline
+  \emph{\say{Rule 6: If the partial autocorrelation function (PACF) of the differenced series displays a sharp cutoff and/or the lag-1 autocorrelation is positive, then consider adding one or more AR terms to the model. The lag which the PACF cuts off is the indicated number of AR terms.}\\
+  \say{Rule 7: If the autocorrelation function (ACF) of the differenced series displays a sharp cutoff and/or the lag-1 autocorrelation is negative, then consider adding an MA term to the model. The lag which the ACF cuts off is the indicated number of MA terms.}}
+  \newline
 
   Rule 6 helps us determine the AR terms. From the PACF plot, at lag-1 there is a steep drop into the negatives then settles into the blue region. Hence, we probably need 1 AR term. Similarly by rule 7, we should pick 1 MA term.
 
-  This gives us an $ARIMA(1,1,1)$ model and this is how it fits with the data.
-
-  Running this through a parameter optimiser, it gives back a parameter list of $(1,1,2)$ so our estimation was pretty close and shows that these rules are not absolute.
+  This gives us an ARIMA$(1,1,1)$ which we have seen before. This gives us an ARIMA$(1,1,1)$ model which we have seen before. In Python there is a package known as pmd\_arima which has a nice function called auto\_arima which computes the best parameters given some data. In this case, it gives back a parameter list of $(1,1,2)$ so our estimation was pretty close and shows that these rules are not absolute.
   
   \subsection{Exponential Smoothing}
   
   \section{Seasonal models}
   Many time series data in the real work exhibit some form of seasonality. These could include higher network traffic during peak hours of the day or increased spending during Christmas. In such cases, we need to take differences greater than 1 known as the seasonal difference. For example, if there are 12 periods in a season, the seasonal diffence is $y_t = Y_t - Y_{t-12}$. Combined with non-seasonal taking a seasonal difference can in some instances help make the data stationary. We will again explore the ARIMA and Exponential Smoothing algorithms and how they were extended to account for seasonality. For these examples, we will use the monthly milk dataset.
+  \begin{figure}[H]
+    \centering
+    \captionsetup{justification=centering}
+    \begin{subfigure}[b]{\linewidth}
+      \includegraphics[width=\linewidth]{milk.png}
+    \end{subfigure}
+    \caption{Milk dataset}
+  \end{figure}
 
   There is a clear rise and fall each year and the total increases each year.
 
@@ -297,18 +379,69 @@ sorting=none
   \end{equation*}
   where $P$, $D$, and $Q$ are the seasonal AR (SAR) terms, seasonal differencing order, and seasonal MA (SMA) terms respectively with $m$ being the period.
 
+  Using backshift notation, the entire equation can be written as:
+  \begin{equation*}
+    \begin{split}
+      (1 - \phi_1B - ... - \phi_pB^p)(1 - \Phi_1B - ... \Phi_PB^{mP})(1 - B)^d(1 - B)^D y_t = \\
+      \mu + (1 + \theta_1B + ... \theta_qB^q)(1 + \Theta_1B + ... \Theta_QB^{mQ})\varepsilon_t.
+    \end{split}
+  \end{equation*}
+
   Using the milk data, we pick $m = 12$ since the data is monthly.
   First let's figure out our order of non-seasonal and seasonal orders of differencing. We can first try 1 order of seasonal differencing and looking at the ACF and PACF graphs.
+  \begin{figure}[H]
+    \centering
+    \captionsetup{justification=centering}
+    \begin{subfigure}[b]{\linewidth}
+      \includegraphics[width=\linewidth]{acf_pacf_seasonaldiff_data.png}
+    \end{subfigure}
+    \caption{ACF and PACF for seasonal differenced data}
+  \end{figure}
 
-  The slow decrease in the ACF signifies and p-value $>=0.05$ indicates that we need more orders of differencing. This time we will try include a non-seasonal difference.
+  The slow decrease in the ACF signifies and p-value $\approx 0.1608 >=0.05$ indicates that we need more orders of differencing. This time we will try include a non-seasonal difference.
+  \begin{figure}[H]
+    \centering
+    \captionsetup{justification=centering}
+    \begin{subfigure}[b]{\linewidth}
+      \includegraphics[width=\linewidth]{acf_pacf_seasonaldiff_nonseasonaldiff_data.png}
+    \end{subfigure}
+    \caption{ACF and PACF for seasonal differenced + non seasonal differenced data}
+  \end{figure}
 
-  This looks a lot better. With a p-value $<0.05$ we can be happy with our orders of differencing being $d=1$ and $D=1$. Note that the order in which you difference the series, either seasonal or non-seasonal first, does not make a difference to the final differenced series.
-
-  Once again, Dr Nau has 2 rules in picking these parameters:
+  This looks a lot better. With a p-value $\approx 1.8654\times10^{-5}<0.05$ we can be happy with our orders of differencing being $d=1$ and $D=1$. Note, by the equation, the order in which you difference the series, either seasonal or non-seasonal first, does not make a difference to the values of the overall differenced series.
   
-  \emph{\say{Rule 12: If the series has a strong and consistent seasonal pattern, then you should use an order of seasonal differencing--but never use more than one order of seasonal differencing or more than 2 orders of total differencing (seasonal+nonseasonal).}}
+  Once again, Dr Nau has 2 rules in picking these parameters:
+  \newline
+  \emph{\say{Rule 12: If the series has a strong and consistent seasonal pattern, then you should use an order of seasonal differencing--but never use more than one order of seasonal differencing or more than 2 orders of total differencing (seasonal+nonseasonal).}\\
+  \say{Rule 13: If the autocorrelation at the seasonal period is positive, consider adding an SAR term to the model. If the autocorrelation at the seasonal period is negative, consider adding an SMA term to the model. Try to avoid mixing SAR and SMA terms in the same model, and avoid using more than one of either kind.}}
 
-  \emph{\say{Rule 13: If the autocorrelation at the seasonal period is positive, consider adding an SAR term to the model. If the autocorrelation at the seasonal period is negative, consider adding an SMA term to the model. Try to avoid mixing SAR and SMA terms in the same model, and avoid using more than one of either kind.}}
+  Combining these and the previous rules, it may be wise to pick a\\
+  SARIMA$(1,1,1)\times(0,1,1)_{12}$ model. Running this through the
+  auto\_arima function, surprisingly yields a SARIMA$(2,0,0)\times(0,1,1)_{12}$ model. Both models fit the data extremely well and the forecasts are able to replicate the rise and fall pattern.
+
+  \begin{figure}[H]
+    \centering
+    \captionsetup{justification=centering}
+    \begin{subfigure}[b]{\linewidth}
+      \includegraphics[width=\linewidth]{SARIMA_111_011_12.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{\linewidth}
+      \includegraphics[width=\linewidth]{SARIMA_111_011_12_forecast.png}
+    \end{subfigure}
+    \caption{SARIMA$(1,1,1)\times(0,1,1)_{12}$ fit and forecasts}
+  \end{figure}
+
+  \begin{figure}[H]
+    \centering
+    \captionsetup{justification=centering}
+    \begin{subfigure}[b]{\linewidth}
+      \includegraphics[width=\linewidth]{SARIMA_200_011_12.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{\linewidth}
+      \includegraphics[width=\linewidth]{SARIMA_200_011_12_forecast.png}
+    \end{subfigure}
+    \caption{SARIMA$(2,0,0)\times(0,1,1)_{12}$ fit and forecasts}
+  \end{figure}
 
   \section{Conclusion}
 
@@ -318,5 +451,5 @@ sorting=none
 
   bibliography\cite{articleFactCheck}
   \printbibliography
-  \end{flushleft}
+  % \end{flushleft}
 \end{document}
