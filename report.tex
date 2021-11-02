@@ -185,7 +185,7 @@ sorting=none
         \includegraphics[width=\linewidth]{AR_2.png}
         \caption{AR(2)}
       \end{subfigure}
-      \caption{Two types of AR models. AR(1) on left with estimated $\phi_1 = -0.70874876$. AR(2) on right with estimated $\phi_1 = -0.87619131, \phi_2 = -0.23067302$}
+      \caption{Two types of AR models. AR(1) with estimated $\phi_1 = -0.70874876$. AR(2) with estimated $\phi_1 = -0.87619131, \phi_2 = -0.23067302$.}
     \end{figure}
 
     Observe that there are subtle changes between the two. If we kept on increasing the AR term, our model would fit this data extremely well. In machine learning, this is commonly known as overfitting and future forecasts can be very inaccurate.
@@ -197,13 +197,20 @@ sorting=none
       \text{or in equivalent backshift notation}\\
       y_t = \mu + (\theta_1B + \theta_2B^2 + ... + \theta_qB^q)\varepsilon_t.
     \end{gather*}
-    If your data is properly stationary, the error terms produced, $\varepsilon_t$, should form white noise and form a normal distribution with $0$ mean and $\theta^2$ variance.
-    
+    If your data is properly stationary, the error terms produced should form white noise in the form of a normal distribution with $0$ mean and $\theta^2$ variance.
+
     \begin{figure}[H]
       \centering
       \captionsetup{justification=centering}
-      \includegraphics[width=\linewidth]{residuals.png}
-      \caption{Error terms used for MA(1) are generally centered around 0 with $\sigma \approx 109.2613$. Increased number of datapoints or more stationary series would make this more apparent.}
+      \begin{subfigure}[b]{0.49\linewidth}
+        \includegraphics[width=\linewidth]{residuals.png}
+        \caption{MA(1)}
+      \end{subfigure}
+      \begin{subfigure}[b]{0.49\linewidth}
+        \includegraphics[width=\linewidth]{residuals2.png}
+        \caption{MA(2)}
+      \end{subfigure}
+      \caption{Error terms for MA(1) with estimated $\theta_1 = -0.6612$ and MA(2) with estimated $\theta_1 = -0.98951583, \theta_2 = 0.48316484$. Both generally look normally distributed with 0 mean.}
     \end{figure}
 
   \subsubsection{Putting It All Together}
@@ -221,11 +228,7 @@ sorting=none
     \item $d$ is the order of differencing to be performed on the data
     \item $q$ is the order of moving averages component
   \end{itemize}
-  This generalised model is great since we don't have to difference the data ourselves and allows for the combination of AR$(p)$ and MA$(q)$ models. The implementation of this is quite simple as you just have to add the results of the AR and MA components together. For my implementation, I estimate the coefficients using a linear least squares solver. This solver optimises our coefficients by the following rule:
-  \begin{equation*}
-    minimise \sum [(X\cdot\theta) - y]^2,
-  \end{equation*}
-  where $X$ are the $p$ lagged values, $y$ is the expected output and $\theta$ is the set of $p$ variables we want to minimise. ARIMA packages in Python and R use Maximum Likelihood Estimation (MLE) to estimate the coefficients which often invoves much more complicated computations for manipulating the data.  
+  This generalised model is great since we don't have to difference the data ourselves and allows for the combination of AR$(p)$ and MA$(q)$ models.  
 
   Running through a list of parameters, we can see effects of different values for the parameters.
 
@@ -248,7 +251,7 @@ sorting=none
       \includegraphics[width=\linewidth]{ARIMA_113.png}
       \caption{ARIMA$(1, 1, 3)$}
     \end{subfigure}
-    \caption{Apart from $p=0, q=0$, the number of $p$ and $q$ terms don't matter a whole lot for fitting the data but we will see what happens to forecasting the data.}
+    \caption{Apart from $p=0, q=0$, notice the subtle differences between the fitted and original data.}
   \end{figure}
 
   \subsubsection{Model Scoring}
@@ -267,15 +270,27 @@ sorting=none
      \hline\hline
      ARIMA$(0,1,0)$ & 447.8405 \\ 
      \hline
-     ARIMA$(1,1,1)$ & 430.2756 \\
+     ARIMA$(1,1,1)$ & 429.5889 \\
      \hline
-     ARIMA$(3,1,1)$ & 433.5333 \\
+     ARIMA$(3,1,1)$ & 433.1124 \\
      \hline
-     ARIMA$(1,1,3)$ & 433.8868 \\
+     ARIMA$(1,1,3)$ & 430.2273 \\
      \hline
     \end{tabular}
   \end{center}
   Here, it looks like our ARIMA$(1,1,1)$ has the best AIC score.
+
+  \subsubsection{Parameter Estimation}
+  The implementation of this is quite simple as you just add the results of the AR and MA components together. For my implementation, the AR coefficients were estimated using a linear least squares solver, similar to a regression model. This solver optimises our coefficients by the following rule:
+  \begin{equation*}
+    minimise \sum [(X\cdot\theta) - y]^2,
+  \end{equation*}
+  where $X$ are the $p$ lagged values, $y$ is the expected output and $\theta$ is the set of $p$ variables we want to minimise. However, the MA coefficients cannot use the same approach. Since there is no way to know the errors until the model is fitted, i.e. the errors are calculated sequentially given the current parameter estimate, so we have to use a non-linear estimator to optimise these coefficients. Additionally, to stop the model from overfitting, I limit various properties of the coefficients, namely,
+  \begin{itemize}
+    \item $-1 <= \sum^q_{i=1}\theta_q <= 1$
+    \item $-1 <= \theta_q <= 1$.
+  \end{itemize}
+  In practice, there are much more complicated constraints than this and many ARIMA packages handle for them. ARIMA packages in Python and R also use Maximum Likelihood Estimation (MLE) to estimate the coefficients which again often invoves much more complicated computations for estimation.
 
   \newpage
   \subsubsection{Order Choosing}
@@ -332,25 +347,21 @@ sorting=none
   \end{enumerate}
   Let's try this with an example using an ARIMA(2,1,2) model as an example. In backshift notation, the model is written as
   \begin{equation*}
-    (1 - \phi_1B - \phi_2B^2)(1-B)y_t = \mu + (1 + \theta_1B + \theta_2B^2)\varepsilon_t.
+    (1 - \phi_1B - \phi_2B^2)(1-B)y_t = \mu + (\theta_1B + \theta_2B^2)\varepsilon_t.
   \end{equation*}
   Using step 1, we expand and group:
   \begin{align*}
-    (1 - B - \phi_1B + \phi_1B^2 - \phi_2B^2 + \phi_2B^3)y_t &= \mu + (1 + \theta_1B + \theta_2B^2)\varepsilon_t\\
-    [1 - (1 + \phi_1)B - (\phi_2 - \phi_1)B^2 + \phi_2B^3]y_t &= \mu + (1 + \theta_1B + \theta_2B^2)\varepsilon_t.
+    (1 - B - \phi_1B + \phi_1B^2 - \phi_2B^2 + \phi_2B^3)y_t &= \mu + (\theta_1B + \theta_2B^2)\varepsilon_t\\
+    [1 - (1 + \phi_1)B - (\phi_2 - \phi_1)B^2 + \phi_2B^3]y_t &= \mu + (\theta_1B + \theta_2B^2)\varepsilon_t.
   \end{align*}
 
   With second step, we convert and move terms we obtain giving
   \begin{gather*}
-    y_t - (1 + \phi_1)y_{t-1} - (\phi_2 - \phi_1)y_{t-2} + \phi_2y_{t-3} = \mu + \varepsilon_t + \theta_1\varepsilon_{t-1} + \theta_2\varepsilon_{t-2},\\
-    y_t = \mu + (1 + \phi_1)y_{t-1} + (\phi_2 - \phi_1)y_{t-2} - \phi_2y_{t-3} + \varepsilon_t + \theta_1\varepsilon_{t-1} + \theta_2\varepsilon_{t-2}.
+    y_t - (1 + \phi_1)y_{t-1} - (\phi_2 - \phi_1)y_{t-2} + \phi_2y_{t-3} = \mu + \theta_1\varepsilon_{t-1} + \theta_2\varepsilon_{t-2},\\
+    y_t = \mu + (1 + \phi_1)y_{t-1} + (\phi_2 - \phi_1)y_{t-2} - \phi_2y_{t-3} + \theta_1\varepsilon_{t-1} + \theta_2\varepsilon_{t-2}.
   \end{gather*}
 
   Third step is to replace $t$ with $T+1$:
-  \begin{equation*}
-    y_{T+1} = \mu + (1 + \phi_1)y_{T} + (\phi_2 - \phi_1)y_{T-1} - \phi_2y_{T-2} + \varepsilon_{T} + \theta_1\varepsilon_{T-1} + \theta_2\varepsilon_{T-2}.
-  \end{equation*}
-  Looking at the right side, there are unusual $\varepsilon_T$ and $\varepsilon_{T-1}$ terms. These values are impossible to know so the $\varepsilon_T$ term gets set to 0 and $\varepsilon_{T-1}$ is replaced with the last known error term. This gives us with a final equation of 
   \begin{equation*}
     y_{T+1} = \mu + (1 + \phi_1)y_{T} + (\phi_2 - \phi_1)y_{T-1} - \phi_2y_{T-2} + \theta_1\varepsilon_{T-1} + \theta_2\varepsilon_{T-2}.
   \end{equation*}
