@@ -185,7 +185,7 @@ sorting=none
         \includegraphics[width=\linewidth]{AR_2.png}
         \caption{AR(2)}
       \end{subfigure}
-      \caption{Two types of AR models. AR(1) with estimated $\phi_1 = -0.70874876$. AR(2) with estimated $\phi_1 = -0.87619131, \phi_2 = -0.23067302$.}
+      \caption{Two types of AR models. AR(1) with estimated $\phi_1 = -0.70868438$. AR(2) with estimated $\phi_1 = -0.9237595, \phi_2 =   -0.26627682$.}
     \end{figure}
 
     Observe that there are subtle changes between the two. If we kept on increasing the AR term, our model would fit this data extremely well. In machine learning, this is commonly known as overfitting and future forecasts can be very inaccurate.
@@ -210,7 +210,7 @@ sorting=none
         \includegraphics[width=\linewidth]{residuals2.png}
         \caption{MA(2)}
       \end{subfigure}
-      \caption{Error terms for MA(1) with estimated $\theta_1 = -0.58305195$ and MA(2) with estimated $\theta_1 = -1.0670577, \theta_2 = 0.64654596$. Both generally look normally distributed with 0 mean.}
+      \caption{Error terms for MA(1) with estimated $\theta_1 = -0.58305195$ and MA(2) with estimated $\theta_1 = -0.71206191, \theta_2 =  0.28793809$. Both generally look normally distributed with 0 mean.}
     \end{figure}
 
   \subsubsection{Putting It All Together}
@@ -293,13 +293,18 @@ sorting=none
   Here, it looks like our ARIMA$(1,1,0)$ and ARIMA$(1,1,1)$ models had the best AIC scores.
 
   \subsubsection{Coefficient Estimation}
-  Estimating the coefficients for an ARIMA model is often a tricky task as there needs to be a balance between having a good fit for the data while not overfitting. For my implementation, both the AR and MA terms were calculated similarly using the Constrained Optimization BY Linear Approximation (COBYLA) algorithm which optimises based on the sum of squared errors.
+  Estimating the coefficients for an ARIMA model is often a tricky task as there needs to be a balance between having a good fit for the data while not overfitting. For my implementation, both the AR and MA terms were calculated similarly using the Constrained Optimization BY Linear Approximation (COBYLA) algorithm which optimises based on the sum of squared errors. To avoid overfitting the data, I set constraints on the coefficients namely,
+  \begin{itemize}
+    \item $-1 \leq \phi_p \leq 1$
+    \item $\phi_i + \phi_{i+1} \leq 1 \quad \text{for} \ i=1,2,...,p-1$
+    \item $\phi_{i+1} - \phi_i \leq 1 \quad \text{for} \ i=1,2,...,p-1$
+  \end{itemize}
   
-  In practice, ARIMA packages in Python and R also use Maximum Likelihood Estimation to estimate the coefficients which often invoves much more complicated computations for estimation. There are also complicated constraints on the coefficients, especially as the values of $p$ and $q$ increase which these packages handle.
+  The same constraints are put for $\theta_1,...,\theta_q$. In practice, ARIMA packages in Python and R use Maximum Likelihood Estimation to estimate the coefficients which often invoves much more complicated computations. There are also more complicated constraints, especially as the values of $p$ and $q$ increase, which these packages handle that account for the invertability and stationarity constraints.
 
   \newpage
   \subsubsection{Order Choosing}
-  Up until now, we have been manually setting the parameters $p$, $d$, and $q$ seemingly by observing which model fits the best. However, there are systematic methods of narrowing down the search space. This is where we look at the autocorrelation function (ACF) plots and partial autocorrelation (PACF) plots to help determine our optimal parameters. Autocorrelation is a way of measuring the similarity between values in a time series and their past. An autocorrelation of $+1$ means that there is a perfect positive correlation while $-1$ represents a perfect negative correlation. Partial autocorrelation is similar to autocorrelation but slightly more complicated to compute. PACF again measures similarity between $y_t$ and $y_{t-\Delta}$ but adjusts for the presence of the other terms of short lag ($y_{t-1}, y_{t-2},...,y_{t-\Delta-1}$).
+  Up until now, we have been manually setting the parameters $p$, $d$, and $q$ seemingly by observing which model fits the best or which one has the best AIC score. However, there are systematic methods of narrowing down the search space. This is where we look at the autocorrelation function (ACF) plots and partial autocorrelation (PACF) plots to help determine our optimal parameters. Autocorrelation is a way of measuring the similarity between values in a time series and their past. An autocorrelation of $+1$ means that there is a perfect positive correlation while $-1$ represents a perfect negative correlation. Partial autocorrelation is similar to autocorrelation but slightly more complicated to compute. PACF again measures similarity between $y_t$ and $y_{t-\Delta}$ but adjusts for the presence of the other terms of short lag ($y_{t-1}, y_{t-2},...,y_{t-\Delta-1}$).
 
   \begin{figure}[H]
     \centering
@@ -359,13 +364,14 @@ sorting=none
     (1 - B - \phi_1B + \phi_1B^2 - \phi_2B^2 + \phi_2B^3)y_t &= \mu + (\theta_1B + \theta_2B^2)\varepsilon_t\\
     [1 - (1 + \phi_1)B - (\phi_2 - \phi_1)B^2 + \phi_2B^3]y_t &= \mu + (\theta_1B + \theta_2B^2)\varepsilon_t.
   \end{align*}
-
-  With second step, we convert and move terms we obtain giving
-  \begin{gather*}
+  With second step, we convert giving
+  \begin{equation*}
     y_t - (1 + \phi_1)y_{t-1} - (\phi_2 - \phi_1)y_{t-2} + \phi_2y_{t-3} = \mu + \theta_1\varepsilon_{t-1} + \theta_2\varepsilon_{t-2},\\
+  \end{equation*}
+  then moving terms
+  \begin{equation*}
     y_t = \mu + (1 + \phi_1)y_{t-1} + (\phi_2 - \phi_1)y_{t-2} - \phi_2y_{t-3} + \theta_1\varepsilon_{t-1} + \theta_2\varepsilon_{t-2}.
-  \end{gather*}
-
+  \end{equation*}
   Third step is to replace $t$ with $T+1$:
   \begin{equation*}
     y_{T+1} = \mu + (1 + \phi_1)y_{T} + (\phi_2 - \phi_1)y_{T-1} - \phi_2y_{T-2} + \theta_1\varepsilon_{T-1} + \theta_2\varepsilon_{T-2}.
@@ -374,7 +380,7 @@ sorting=none
   \begin{equation*}
     y_{T+2} = \mu + (1 + \phi_1)y_{T+1} + (\phi_2 - \phi_1)y_{T} - \phi_2y_{T-1} + \theta_2\varepsilon_{T-1}.
   \end{equation*}
-  Observe that there should be a $\theta_1\varepsilon_{T}$ term but since we set the time series value at $T$ to be equal to the predicted value, this error term evaluates to 0. We are essentially taking our predicted value as the truth which is why all the error terms eventually become negligible. Hence, if you predict $S > q$ future time steps, all MA terms disappear. 
+  Observe that there should be a $\theta_1\varepsilon_{T}$ term but since we set the time series value at $T$ to be equal to the predicted value, this error term evaluates to 0. We are essentially taking our predicted value as the truth which is why all the error terms eventually become 0. Hence, if you predict $S > q$ future time steps, all MA terms disappear. 
 
   \begin{figure}[H]
     \centering
