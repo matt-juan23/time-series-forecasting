@@ -210,7 +210,7 @@ sorting=none
         \includegraphics[width=\linewidth]{residuals2.png}
         \caption{MA(2)}
       \end{subfigure}
-      \caption{Error terms for MA(1) with estimated $\theta_1 = -0.6612$ and MA(2) with estimated $\theta_1 = -0.98951583, \theta_2 = 0.48316484$. Both generally look normally distributed with 0 mean.}
+      \caption{Error terms for MA(1) with estimated $\theta_1 = -0.58305195$ and MA(2) with estimated $\theta_1 = -1.0670577, \theta_2 = 0.64654596$. Both generally look normally distributed with 0 mean.}
     \end{figure}
 
   \subsubsection{Putting It All Together}
@@ -244,14 +244,22 @@ sorting=none
       \caption{ARIMA$(1, 1, 1)$}
     \end{subfigure}
     \begin{subfigure}[b]{0.49\linewidth}
-      \includegraphics[width=\linewidth]{ARIMA_311.png}
-      \caption{ARIMA$(3, 1, 1)$}
+      \includegraphics[width=\linewidth]{ARIMA_110.png}
+      \caption{ARIMA$(1, 1, 0)$}
     \end{subfigure}
     \begin{subfigure}[b]{0.49\linewidth}
-      \includegraphics[width=\linewidth]{ARIMA_113.png}
-      \caption{ARIMA$(1, 1, 3)$}
+      \includegraphics[width=\linewidth]{ARIMA_011.png}
+      \caption{ARIMA$(0, 1, 1)$}
     \end{subfigure}
-    \caption{Apart from $p=0, q=0$, notice the subtle differences between the fitted and original data.}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{ARIMA_211.png}
+      \caption{ARIMA$(2, 1, 1)$}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{ARIMA_112.png}
+      \caption{ARIMA$(1, 1, 2)$}
+    \end{subfigure}
+    \caption{Fits for different values of $p$ and $q$}
   \end{figure}
 
   \subsubsection{Model Scoring}
@@ -270,27 +278,24 @@ sorting=none
      \hline\hline
      ARIMA$(0,1,0)$ & 447.8405 \\ 
      \hline
-     ARIMA$(1,1,1)$ & 429.5889 \\
+     ARIMA$(1,1,1)$ & 430.1539 \\
      \hline
-     ARIMA$(3,1,1)$ & 433.1124 \\
+     ARIMA$(1,1,0)$ & 429.1197 \\ 
      \hline
-     ARIMA$(1,1,3)$ & 430.2273 \\
+     ARIMA$(0,1,1)$ & 433.8894 \\
+     \hline
+     ARIMA$(2,1,1)$ & 430.3742 \\
+     \hline
+     ARIMA$(1,1,2)$ & 431.4727 \\
      \hline
     \end{tabular}
   \end{center}
-  Here, it looks like our ARIMA$(1,1,1)$ has the best AIC score.
+  Here, it looks like our ARIMA$(1,1,0)$ and ARIMA$(1,1,1)$ models had the best AIC scores.
 
-  \subsubsection{Parameter Estimation}
-  The implementation of this is quite simple as you just add the results of the AR and MA components together. For my implementation, the AR coefficients were estimated using a linear least squares solver, similar to a regression model. This solver optimises our coefficients by the following rule:
-  \begin{equation*}
-    minimise \sum [(X\cdot\theta) - y]^2,
-  \end{equation*}
-  where $X$ are the $p$ lagged values, $y$ is the expected output and $\theta$ is the set of $p$ variables we want to minimise. However, the MA coefficients cannot use the same approach. Since there is no way to know the errors until the model is fitted, i.e. the errors are calculated sequentially given the current parameter estimate, so we have to use a non-linear estimator to optimise these coefficients. Additionally, to stop the model from overfitting, I limit various properties of the coefficients, namely,
-  \begin{itemize}
-    \item $-1 <= \sum^q_{i=1}\theta_q <= 1$
-    \item $-1 <= \theta_q <= 1$.
-  \end{itemize}
-  In practice, there are much more complicated constraints than this and many ARIMA packages handle for them. ARIMA packages in Python and R also use Maximum Likelihood Estimation (MLE) to estimate the coefficients which again often invoves much more complicated computations for estimation.
+  \subsubsection{Coefficient Estimation}
+  Estimating the coefficients for an ARIMA model is often a tricky task as there needs to be a balance between having a good fit for the data while not overfitting. For my implementation, both the AR and MA terms were calculated similarly using the Constrained Optimization BY Linear Approximation (COBYLA) algorithm which optimises based on the sum of squared errors.
+  
+  In practice, ARIMA packages in Python and R also use Maximum Likelihood Estimation to estimate the coefficients which often invoves much more complicated computations for estimation. There are also complicated constraints on the coefficients, especially as the values of $p$ and $q$ increase which these packages handle.
 
   \newpage
   \subsubsection{Order Choosing}
@@ -391,12 +396,12 @@ sorting=none
       \caption{ARIMA$(0, 1, 1)$}
     \end{subfigure}
     \begin{subfigure}[b]{0.49\linewidth}
-      \includegraphics[width=\linewidth]{forecast_ARIMA_311.png}
-      \caption{ARIMA$(3, 1, 1)$}
+      \includegraphics[width=\linewidth]{forecast_ARIMA_211.png}
+      \caption{ARIMA$(2, 1, 1)$}
     \end{subfigure}
     \begin{subfigure}[b]{0.49\linewidth}
-      \includegraphics[width=\linewidth]{forecast_ARIMA_113.png}
-      \caption{ARIMA$(1, 1, 3)$}
+      \includegraphics[width=\linewidth]{forecast_ARIMA_112.png}
+      \caption{ARIMA$(1, 1, 2)$}
     \end{subfigure}
     \caption{Forecasting for 15 future time steps from different ARIMA models. (c) and (d) are equivalent to an AR(1) and MA(1) with 1 order of differencing.}
   \end{figure}
