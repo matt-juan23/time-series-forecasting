@@ -118,8 +118,173 @@ sorting=none
   \newpage
   
   \section{Non-Seasonal Forecasting Models}
-    There are many types of forecasting models but this paper will look two types. ARIMA (Auto-Regressive Integrated Moving Average) and Exponential \\Smoothing models. For these models, we will use the Shampoo Sales dataset shown previously.
+    There are many types of forecasting models but this paper will look two types. ARIMA (Auto-Regressive Integrated Moving Average) and Exponential Smoothing models. For these non-seasonal models, we will use the Shampoo Sales dataset shown previously.
+
+  \subsection{Exponential Smoothing}
+    As the name suggests, Exponential Smoothing models are essentially weighted averages of past observations which decay exponentially over time. This type allows for a reliable and quick way to forecast for a wide array of time series'. This section of the paper will go into an implementation of simple exponential smoothing, Holt's linear trend method and the damped trend method.
+
+  \subsubsection{Simple Exponential Smoothing}
+  This method of forecasting is extremely simple and is useful when there is no clear trend or seasonal pattern in the data. As mentioned, this method uses a weighted average where the weights decrease exponentially the further in the past the associated observation is. Therefore, for a time series with $T$ datapoints, we can define such an forecast equation as:
+  \begin{equation*}
+    \hat{y}_{T+1} = \alpha y_T + \alpha(1-\alpha)y_{T-1} + \alpha(1-\alpha)^2y_{T-2} + \alpha(1-\alpha)^3y_{T-3} + ...,
+  \end{equation*}
+  where $0 \le \alpha \le 1$ is the smoothing parameter and $\hat{y}_{T}$ is the forecasted value at time $T+1$. This equation can be simplified by using the forecasted value at time $T$ to predict the value at time $T+1$ resulting in
+  \begin{equation*}
+    \hat{y}_{T+1} = \alpha y_T + (1-\alpha)\hat{y}_{T}.
+  \end{equation*}
+
+  This method can also be expressed in component form. The only component with single exponential smoothing is the level, $l_t$. In component form, simple exponential smoothing is shown by:
+  \begin{align*}
+    & \text{Level equation} & \ell_t &= \alpha y_t + (1-\alpha)(\ell_{t-1}), \qquad 0 \le \alpha \le 1  \\
+    & \text{Forecast equation} & \hat{y}_{t+h} &= \ell_t \\
+  \end{align*}
+  The forecasting equation produces a "flat" forecast equal to the last level component since setting $t=T$, we get
+  \begin{equation*}
+    \hat{y}_{T+h} = \ell_T, \qquad h=1,2,....
+  \end{equation*}
   
+  Let's see how this is applied to the shampoo dataset. Firstly, we need to estimate values for $\alpha$ as well as the initial level $\ell_0$. By minimising the SSE (sum of squared errors), the estimated parameters are $\alpha=0.40$ and $\ell_0=202.78$. The table below shows the calculations using these parameters.
+
+  \begin{center}
+    \begin{tabular}{||c c c c||} 
+     \hline
+     Time($t$) & Observation($y_t$) & Level($\ell_t$) & Forecast($\hat{y}_t$) \\ [0.5ex] 
+     \hline
+     0 &       & 202.78 &  \\ 
+     \hline
+     1 & 266.0 & 228.03 & 202.78 \\
+     \hline
+     2 & 145.9 & 195.23 & 228.03 \\
+     \hline
+     3 & 183.1 & 190.38 & 195.23 \\
+     \hline
+     4 & 119.3 & 161.99 & 190.38 \\
+     \hline
+     \vdots & \vdots & \vdots & \vdots \\
+     \hline
+     33 & 682.0 & 541.92 & 448.78 \\
+     \hline
+     34 & 475.3 & 515.32 & 541.92 \\
+     \hline
+     35 & 581.3 & 541.67 & 515.32 \\
+     \hline
+     36 & 646.9 & 583.70 & 541.67 \\
+     \hline
+     $h$ &  &  & $\hat{y}_{T+h}$ \\
+     \hline
+     1 &  &  & 583.70 \\
+     \hline
+     2 &  &  & 583.70 \\
+     \hline
+     3 &  &  & 583.70 \\
+     \hline
+     4 &  &  & 583.70 \\
+     \hline
+     5 &  &  & 583.70 \\
+     \hline
+    \end{tabular}
+  \end{center}
+
+  \begin{figure}[H]
+    \centering
+    \captionsetup{justification=centering}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{simple_exp_fit.png}
+      \caption{Fitted values}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{simple_exp_forecast.png}
+      \caption{Forecasted values}
+    \end{subfigure}
+    \caption{Fitted and forecasted values using simple exponential smoothing}
+  \end{figure}
+
+  \subsubsection{Trend Methods}
+  This section will show Holt's linear trend method and Gardner \& McKenzie's damped trend method which extend simple exponential smoothing by incorporating the trend component.
+
+  \subsubsection*{Holt's Linear Trend Method}
+  This method now has three equations, a level smoothing equation, a trend smoothing equation, and a forecast equation:
+  \begin{align*}
+    \text{Forecast equation} && \hat{y}_{t+h|t} &= \ell_{t} + hb_{t} \\
+    \text{Level equation}   && \ell_{t} &= \alpha y_{t} + (1 - \alpha)(\ell_{t-1} + b_{t-1})\\
+    \text{Trend equation}   && b_{t}    &= \beta(\ell_{t} - \ell_{t-1}) + (1 -\beta)b_{t-1},
+  \end{align*}
+  where $0 \le \alpha, \beta \le 1$. By including the trend, forecasts are no longer flat but a linear function of $h$. As such, the forecasted value at time $T+h$ is equal to the last level plus $h$ multiplied by the last calculated trend value.
+
+  There are now two smoothing parameters $\alpha$ and $\beta$ as well as two initial states $\ell_0$ and $b_0$ which are estimated to $\alpha=0.49, \beta=0.27, \ell_0=262.93, b_0=-18.01$.
+
+  \begin{center}
+    \begin{tabular}{||c c c c c||} 
+     \hline
+     Time($t$) & Observation($y_t$) & Level($\ell_t$) & Slope($b_t$) & Forecast($\hat{y}_t$) \\ [0.5ex] 
+     \hline
+     0 &       & 262.93 & -18.01 &  \\ 
+     \hline
+     1 & 266.0 & 255.19 & -15.23 & 244.92 \\
+     \hline
+     2 & 145.9 & 194.14 & -27.65 & 244.92 \\
+     \hline
+     3 & 183.1 & 174.58 & -25.46 & 239.96 \\
+     \hline
+     4 & 119.3 & 134.60 & -29.40 & 166.489 \\
+     \hline
+     \vdots & \vdots & \vdots & \vdots & \vdots \\
+     \hline
+     33 & 682.0 & 583.60 & 39.51 & 540.92 \\
+     \hline
+     34 & 475.3 & 551.11 & 19.99 & 490.15 \\
+     \hline
+     35 & 581.3 & 576.07 & 21.33 & 623.11 \\
+     \hline
+     36 & 646.9 & 621.51 & 27.87 & 571.10 \\
+     \hline
+     $h$ &  &  &  & $\hat{y}_{T+h}$ \\
+     \hline
+     1 &  &  &  & 649.38 \\
+     \hline
+     2 &  &  &  & 677.25 \\
+     \hline
+     3 &  &  &  & 705.12 \\
+     \hline
+     4 &  &  &  & 732.99 \\
+     \hline
+     5 &  &  &  & 760.86 \\
+     \hline
+    \end{tabular}
+  \end{center}
+
+  \begin{figure}[H]
+    \centering
+    \captionsetup{justification=centering}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{holt_linear_fit.png}
+      \caption{Fitted values}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{holt_linear_forecast.png}
+      \caption{Forecasted values $\phi=0.9$}
+    \end{subfigure}
+    \caption{Fitted and forecasted values using Holt linear trend method}
+  \end{figure}
+
+  \subsubsection*{Damped Trend Method}
+  Holt's Linear method show a constant increasing or decreasing trend which extends indefinitely into the future. However, in reality this method can be quite inaccurate for extended forecasts. Gardner \& McKenzie introduced a dampening parameter $\phi$, where $0 \le \phi \le 1$. This parameter dampens the trend to forecast a flat line after some time.
+
+  The component form of this method is:
+  \begin{align*}
+    \text{Forecast equation}&& \hat{y}_{t+h|t} &= \ell_{t} + (\phi+\phi^2+...+\phi^h)b_{t} \\
+    \text{Level equation}   && \ell_{t} &= \alpha y_{t} + (1 - \alpha)(\ell_{t-1} + \phi b_{t-1})\\
+    \text{Trend equation}   && b_{t}    &= \beta(\ell_{t} - \ell_{t-1}) + (1 -\beta)\phi b_{t-1}.
+  \end{align*}
+  When $\phi=1$, this method produces Holt's linear method.
+
+  \begin{figure}[H]
+    \centering
+    \captionsetup{justification=centering}
+    \includegraphics[width=\linewidth]{damped_forecast.png}
+    \caption{Forecasts for different values of $\phi$}
+  \end{figure}
+
   \subsection{ARIMA}
     ARIMA is an extension of the ARMA or Box-Jenkin model popularised by George E. P. Box and Gwilym Jenkins in 1970. The main difference is that ARIMA simply allows for an extra parameter $d$ which defines how much differencing should be done before fitting the model, whereas ARMA assumes the data is stationary already. 
     ARIMA is actually a combination of three components, an autoregressive model (AR), a moving averages model (MA), and an integrated (I) part denoting the previously mentioned differencing. We will dive into what makes up AR and MA models and how ARIMA is able to effectively combine the two.
@@ -411,12 +576,11 @@ sorting=none
     \end{subfigure}
     \caption{Forecasting for 15 future time steps from different ARIMA models. (c) and (d) are equivalent to an AR(1) and MA(1) with 1 order of differencing.}
   \end{figure}
-
-
-  \subsection{Exponential Smoothing}
   
+  \newpage
+
   \section{Seasonal models}
-  Many time series data in the real work exhibit some form of seasonality. These could include higher network traffic during peak hours of the day or increased spending during Christmas. In such cases, we need to take differences greater than 1 known as the seasonal difference. For example, if there are 12 periods in a season, the seasonal diffence is $y_t = Y_t - Y_{t-12}$. Combined with non-seasonal taking a seasonal difference can in some instances help make the data stationary. We will again explore the ARIMA and Exponential Smoothing algorithms and how they were extended to account for seasonality. For these examples, we will use the monthly milk dataset.
+  Many time series data in the real work exhibit some form of seasonality. This includes higher network traffic during peak hours of the day or increased spending during Christmas. As such, there is a defined frequency of seasonality commonly denoted as $m$. For example $m=4$ could represent quarterly data and $m=12$ for monthly data. We will again explore the ARIMA and Exponential Smoothing algorithms and how they were extended to account for seasonality. For these examples, we will use the monthly milk dataset. This dataset is great since there is a clear seasonal pattern and the data is trending upward.
   \begin{figure}[H]
     \centering
     \captionsetup{justification=centering}
@@ -426,10 +590,80 @@ sorting=none
     \caption{Milk dataset}
   \end{figure}
 
-  There is a clear rise and fall each year and the total increases each year.
+  \newpage
+  \subsection{Holt-Winters' Seasonal Method}
+  Holt and Winters improved Holt's linear method to capture seasonality. This method includes a level equation, trend equation, seasonal equation, and forecasting equation. It introduces a new smoothing parameter $\gamma$ and $m$ initial seasonal values that have to be estimated. This method comes in two flavours, an additive and multiplicative method. Which one you pick is dependent on your data. The additive method is preferred when seasonal variations and trend change at a constant rate. Peaks and valleys in your data are roughly of the same magnitude. In contrast, multiplicative is preferred when the changes are proportional to the level of the series. 
 
+  \subsubsection{Additive Method}
+  \begin{align*}
+    \text{Level equation}   &&\ell_{t} &= \alpha(y_{t} - s_{t-m}) + (1 - \alpha)(\ell_{t-1} + b_{t-1})\\
+    \text{Trend equation}   &&b_{t} &= \beta(\ell_{t} - \ell_{t-1}) + (1 - \beta)b_{t-1}\\
+    \text{Seasonal equation}   &&s_{t} &= \gamma (y_{t}-\ell_{t-1}-b_{t-1}) + (1-\gamma)s_{t-m}\\
+    \text{Forecast equation}   && \hat{y}_{t+h} &= \ell_{t} + hb_{t} + s_{t+h-m(k+1)},
+  \end{align*}
+  where $k$ is defined as $\lfloor\frac{h-1}{m}\rfloor$. This guarantees that that every forecast uses the seasonal component from the most recently observed season. 
+
+  \subsubsection{Multiplicative Method}
+  \begin{align*}
+    \text{Level equation}   &&\ell_{t} &= \alpha \frac{y_{t}}{s_{t-m}} + (1 - \alpha)(\ell_{t-1} + b_{t-1})\\
+    \text{Trend equation}   &&b_{t} &= \beta(\ell_{t}-\ell_{t-1}) + (1 - \beta)b_{t-1}\\
+    \text{Seasonal equation}   &&s_{t} &= \gamma \frac{y_{t}}{(\ell_{t-1} + b_{t-1})} + (1 - \gamma)s_{t-m}\\
+    \text{Forecast equation}   &&\hat{y}_{t+h} &= (\ell_{t} + hb_{t})s_{t+h-m(k+1)},
+  \end{align*}
+
+  \subsubsection{Initial Values for Trend and Seasonal Components}
+  Similar to the non seasonal method, values can be estimated for the initial trend and initial seasonal components to speed up the optimisation process.
+
+  \subsubsection*{Initial Trend}
+  For Holt Linear, we simply used the first two data points for the initial trend. Since we have seasonal data, we can make a better estimate by taking the average trend between the first two seasons:
+  \begin{equation*}
+    b_0 = \frac{1}{m}\left(\frac{y_{m+1}-y_1}{m} + \frac{y_{m+2}-y_2}{m} + ... + \frac{y_{m+m}-y_m}{m}\right)
+  \end{equation*}
+
+  \subsubsection*{Initial Seasonal Components}
+  Calculating the initial seasonal components is done in a relatively similar manner. First we compute the averages $A_n$ for each of the $N$ years,
+  \begin{equation*}
+    A_n = \frac{\sum_{i=1}^m{y_i}}{m}, \qquad n=1,2,...,N.
+  \end{equation*}
+
+  The next step depends on whether the additive or multiplicative method is used. For additive, we sum up the differences between the time associated data points in each season with their respective yearly average and finally divide by $N$,
+  \begin{align*}
+    s_1 &= \frac{1}{N}\left[(y_1-A_1) + (y_{m+1}-A_2) + ... + (y_{m(N-1)+1}-A_N)\right]\\
+    s_2 &= \frac{1}{N}\left[(y_2-A_1) +( y_{m+2}-A_2) + ... + (y_{m(N-1)+2}-A_N)\right]\\
+    &\vdots
+  \end{align*}
+  For multiplicative, instead of taking the difference, we divide the data point by the respective average, i.e. $\frac{y_1}{A_1}$.
+
+  \begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{holt_winters_add_fit.png}
+       \caption{Additive fit}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{holt_winters_mult_fit.png}
+      \caption{Multiplicative fit}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{holt_winters_add_forecast.png}
+       \caption{Additive forecast}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{holt_winters_mult_forecast.png}
+      \caption{Multiplicative forecast}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.75\linewidth}
+      \includegraphics[width=\linewidth]{holt_winters_combined_forecast.png}
+      \caption{Comparitive forecast}
+    \end{subfigure}
+    \caption{Fits and forecasts for Holt-Winters' method}
+  \end{figure}
+
+  Looking at the comparitive forecast, the differences between additive and multiplicative become apparent. The difference between the peaks and dips for each season become larger as time goes on whereas it stays constant in the additive case.
+
+  \newpage
   \subsection{Seasonal ARIMA}
-  If non-seasonal ARIMA wasn't complicated enough, there exists a seasonal extension which introduces 3 new parameters. A seasonal ARIMA model has two components, non-seasonal and seasonal, which are both structurally the same. Each can have their own AR, MA and order of differencing parameters. Seasonal ARIMA models can be written as 
+  If non-seasonal ARIMA wasn't complicated enough, there exists a seasonal extension which introduces 3 new parameters. A seasonal ARIMA model has two components, non-seasonal and seasonal, which are both structurally the same. Each have their own AR, MA and order of differencing parameters. Combined with non-seasonal differencing, taking a seasonal difference can in some instances help make the data more stationary. Seasonal differencing is simply $y_t' = y_t - y_{t-m}$. Seasonal ARIMA models can be written as 
   \begin{equation*}
     ARIMA(p,d,q)\times(P,D,Q)_m
   \end{equation*}
