@@ -43,88 +43,21 @@ sorting=none
   However, by analysing the time series, it is possible to formulate
   statistical properites that can be used to give a rough estimate of
   where the data is heading.
-  \newpage
-  \section{Properties of Time Series Data}
-  A time series can fundamentally be thought of as a random variable consisting of a signal and noise. This signal and noise are formed by 3 components which are core to understanding time series', trend, seasonality, and residual. Understanding their role and what they represent as well as some other key definitions are needed before diving in to analysing time series data.
-  
-  \subsection{Trend}
-  The first component is trend. Trend can be viewed as how the data is changing overall. Is the data increasing or decreasing.
-  
-  \subsection{Seasonality}
-  Seasonality refers to a regular occuring pattern that emerges within a given period. E.g peaks or valleys in the data during certain months or hours in the day.
-  
-  \subsection{Residual}
-  Residual, also commonly referred to as errors, are the parts left over after fitting a model to the data. In many time series models, it is defined as the difference between the actual observation and the predicted value.
-  
-  \subsection{Additive vs Multiplicative}
-  The trend and seasonality in a time series can be classified as being additive or multiplicative.
-  In additive time series', the data exhibits a general upwards or downwards trend but does so at a constant rate. Peaks and valleys in your data are roughly the same size.
-  In contrast, multiplicative time series data exhibits peaks or valleys that are amplified within the seasonal activity. The data becomes exaggerated and the difference between peaks at the start are very different than at the tail.
-  \newpage
-  \subsection{Stationarity}
-  Before going into analysis, the time series needs to be stationary.
-  A random variable that forms a time series is classified stationary if it's probabilty distribution is constant throughout the full range of times. 
-  Formally, if $T$ is the set of all times in your time series of length $n$, a random process $X$ is stationary if the joint probability distribution at times $t_1,...,t_n \in T$ and $t_1+\Delta,...,t_n+\Delta \in T,\  \Delta \in \mathbb{R}$ are equal. That is
-  \begin{equation*}
-    F_{X}(x_{t_1},...,x_{t_n}) = F_{X}(x_{{t_1}+\Delta},...,x_{{t_n}+\Delta})\ \forall x_{t_1},...,x_{t_n} \in T
-  \end{equation*}
-  Intuitively, this means a stationary time series has constant propertues such as mean, variance, covariance, etc. Below shows the differences between stationary and non-stationary processes.
-  \begin{figure}[H]
-    \centering
-    \includegraphics[scale=0.8]{stationary_time_series.png}
-    \caption{}
-  \end{figure}
-
-  \subsubsection{How to test for stationarity}
-    To determine whether a time series is stationary or not, the Augmented Dickey Fuller(ADF) test can be performed. ADF performs a hypothesis test and upon observing p-value $p < \alpha$ where $\alpha$ is commonly 0.05, the hypothesis is rejected and the data is considered to be stationary.
-
-  \subsubsection{Methods of making a time series stationary}
-    If you have a non-stationary time series, there are a few ways to make it stationary. Let's use the Shampoo Sales dataset which describes the monthly number of sales of shampoo over a 3 year period.
-    The data here has a distinct multiplicative increasing trend and is clearly non stationary. Using the ADF test, the p-value comes out to $1>0.05$ so there is weak evidence against the null hypothesis so the data is non-stationary.
-    \begin{figure}[H]
-      \includegraphics[width=\linewidth]{data_both.png}
-      \caption{}
-    \end{figure}
-    The most common is differencing. Differencing involves creating a new dataset where the values at time $t$ is equal to the difference between the original value at time $t$ and original value at $t-1$. So if $Y$ is the new dataset and $y$ is the original data, then
-    \begin{equation*}
-      Y_t = y_t - y_{t-1}.
-    \end{equation*}
-    Sometimes the differenced data will not make the data stationary enough and it may be necessary to difference the data again known as 2nd order differencing. This process is applicable to higher orders
-    Note, the 2nd order difference is not $Y_t = y_t - y_{t-2}$ but it is the first differnce of the first difference so it comes out to
-    \begin{equation*}
-      Y_t = (y_t - y_{t-1}) - (y_{t-1} - y_{t-2}).
-    \end{equation*}
-    The p-value from the ADF test is about $1.8 \times 10^{-10} < 0.05$ so the data is now stationary.
-    \begin{figure}[H]
-      \centering
-      \includegraphics[width=\linewidth]{diff_both.png}
-      \caption{}
-    \end{figure}
-    Another common technique is to detrend by model fitting. You simply fit a regression model, such as linear or exponential, and create a new dataset where each value at time $t$ is equal to the difference between the original value and the predicted value.
-    When fitted with a 2nd order polynomial regression model, the resulting differences produced a p-value of about $3.4 \times 10^{-10}< 0.05$ so again, the data is now stationary.
-    \begin{equation*}
-      Y_t = y_t - pred_t.
-    \end{equation*}
-    Again, the data is much more stationary than the original.
-    \begin{figure}[H]
-      \centering
-      \includegraphics[width=\linewidth]{reg_both.png}
-      \caption{}
-    \end{figure}
-    There are various other techniques that can be performed and combined with one another to make your data more stationary.
-    If your data has a seasonal pattern to it, seasonal differencing can be performed where you take the difference between $t$ and $t-\rho$ where $\rho$ is the period of your data.
-    Non-linear transformations your dataset such as logging can also prove effective at making data stationary.
   
   \newpage
   
   \section{Non-Seasonal Forecasting Models}
-    There are many types of forecasting models but this paper will look two types. ARIMA (Auto-Regressive Integrated Moving Average) and Exponential Smoothing models. For these non-seasonal models, we will use the Shampoo Sales dataset shown previously.
+    There are many types of forecasting models but this paper will look two types. Exponential Smoothing and ARIMA (Auto-Regressive Integrated Moving Average) models. For these non-seasonal models, we will use the Shampoo Sales dataset since there is no clear seasonality to the data.
+    \begin{figure}[H]
+      \includegraphics[width=\linewidth]{data_both.png}
+    \end{figure}
 
   \subsection{Exponential Smoothing}
-    As the name suggests, Exponential Smoothing models are essentially weighted averages of past observations which decay exponentially over time. This type allows for a reliable and quick way to forecast for a wide array of time series'. This section of the paper will go into an implementation of simple exponential smoothing, Holt's linear trend method and the damped trend method.
+    As the name suggests, Exponential Smoothing models are essentially weighted averages of past observations which decay exponentially over time. This type allows for a reliable and quick way to forecast for a wide array of time series'. This section of the paper will go into an implementation of simple exponential smoothing, Holt's linear trend method, and the damped trend method.
+  
 
   \subsubsection{Simple Exponential Smoothing}
-  This method of forecasting is extremely simple and is useful when there is no clear trend or seasonal pattern in the data. As mentioned, this method uses a weighted average where the weights decrease exponentially the further in the past the associated observation is. Therefore, for a time series with $T$ datapoints, we can define such an forecast equation as:
+  This method of forecasting is extremely simple and is useful when there is no clear trend or seasonal pattern in the data. As mentioned, this method uses a weighted average where the weights decrease exponentially the further in the past the associated observation is. Therefore, for a time series with $T$ data points, we can define such an forecast equation as:
   \begin{equation*}
     \hat{y}_{T+1} = \alpha y_T + \alpha(1-\alpha)y_{T-1} + \alpha(1-\alpha)^2y_{T-2} + \alpha(1-\alpha)^3y_{T-3} + ...,
   \end{equation*}
@@ -133,12 +66,12 @@ sorting=none
     \hat{y}_{T+1} = \alpha y_T + (1-\alpha)\hat{y}_{T}.
   \end{equation*}
 
-  This method can also be expressed in component form. The only component with single exponential smoothing is the level, $l_t$. In component form, simple exponential smoothing is shown by:
+  This equation can also be expressed in component form defined as a level $\ell_t$ smoothing equation and forecasting equation:
   \begin{align*}
-    & \text{Level equation} & \ell_t &= \alpha y_t + (1-\alpha)(\ell_{t-1}), \qquad 0 \le \alpha \le 1  \\
+    & \text{Level equation} & \ell_t &= \alpha y_t + (1-\alpha)(\ell_{t-1})  \\
     & \text{Forecast equation} & \hat{y}_{t+h} &= \ell_t \\
   \end{align*}
-  The forecasting equation produces a "flat" forecast equal to the last level component since setting $t=T$, we get
+  where $0 \le \alpha \le 1$. The forecasting equation produces a "flat" forecast equal to the last level component since setting $t=T$, we get
   \begin{equation*}
     \hat{y}_{T+h} = \ell_T, \qquad h=1,2,....
   \end{equation*}
@@ -200,7 +133,7 @@ sorting=none
   \end{figure}
 
   \subsubsection{Trend Methods}
-  This section will show Holt's linear trend method and Gardner \& McKenzie's damped trend method which extend simple exponential smoothing by incorporating the trend component.
+  This section will show Holt's linear trend method and Gardner \& McKenzie's damped trend method which extend simple exponential smoothing by incorporating the trend component. Trend is simply the general upwards or downwards motion of the data.
 
   \subsubsection*{Holt's Linear Trend Method}
   This method now has three equations, a level smoothing equation, a trend smoothing equation, and a forecast equation:
@@ -211,7 +144,7 @@ sorting=none
   \end{align*}
   where $0 \le \alpha, \beta \le 1$. By including the trend, forecasts are no longer flat but a linear function of $h$. As such, the forecasted value at time $T+h$ is equal to the last level plus $h$ multiplied by the last calculated trend value.
 
-  There are now two smoothing parameters $\alpha$ and $\beta$ as well as two initial states $\ell_0$ and $b_0$ which are estimated to $\alpha=0.49, \beta=0.27, \ell_0=262.93, b_0=-18.01$.
+  There are now two smoothing parameters $\alpha$ and $\beta$ as well as two initial states $\ell_0$ and $b_0$ which are estimated to $\alpha=0.49, \beta=0.27, \ell_0=262.93, b_0=-18.01$. Giving an initial trend of $y_1-y_0$ can help the optimizer narrow the search space for this parameter.
 
   \begin{center}
     \begin{tabular}{||c c c c c||} 
@@ -287,36 +220,58 @@ sorting=none
 
   \subsection{ARIMA}
     ARIMA is an extension of the ARMA or Box-Jenkin model popularised by George E. P. Box and Gwilym Jenkins in 1970. The main difference is that ARIMA simply allows for an extra parameter $d$ which defines how much differencing should be done before fitting the model, whereas ARMA assumes the data is stationary already. 
-    ARIMA is actually a combination of three components, an autoregressive model (AR), a moving averages model (MA), and an integrated (I) part denoting the previously mentioned differencing. We will dive into what makes up AR and MA models and how ARIMA is able to effectively combine the two.
-    As previously discussed, a random variable in the form of a time series can be viewed as being a combination of signal and noise. The goal of ARIMA is to filter the noise and extrapolate the signal.
+    ARIMA is actually a combination of three components, an autoregressive model (AR), a moving averages model (MA), and an integrated (I) part denoting the order of differencing. The ultimate goal of ARIMA is to filter the noise and extrapolate the signal wihtin a time series.
   
-  \subsubsection{Backshift Notation}
-  Before we jump into defining what an ARIMA model is, there is a useful backshift operator $B$ denoting the time series lags,
-  \begin{equation*}
-    By_t = y_{t-1}.
-  \end{equation*}
-  $B$ effectively shifts that data back one time period. So naturally, two applications of $B$ shifts the data back two time periods. 
-  \begin{align*}
-    B(By_t) &= B^2y_t \\
-    &= y_{t-2}.
-  \end{align*}
-  If we describe how differencing works using this notation it comes out to
-  \begin{align*}
-    Y_t &= y_t - y_{t-1} \\
-    &= y_t - By_t \\
-    &= (1 - B)y_t.
-  \end{align*}
-  You will start to see a pattern when you take higher order differences. For second order,
-  \begin{align*}
-    Y_t &= (y_t - y_{t-1}) - (y_{t-1} - y_{t-2}) \\
-    &= (y_t - 2By_t + B^2y_t) \\
-    &= (1 - B)^2y_t.
-  \end{align*}
-  In general, the $d$'th order of differencing is defined as 
-  \begin{equation*}
-    Y_t = (1 - B)^dy_t.
-  \end{equation*}
-  This notation is great as we can use $B$ is an algebraic manner which greatly simplifies some upcoming formulas.
+  \subsubsection{Stationarity}
+    ARIMA models work best on data that is "stationary". Intuitively, a stationary time series has statistical properties, such as mean, variance, covariance, etc, that remain constant throughout the whole time.
+    Below shows the differences between stationary and non-stationary processes.
+    \begin{figure}[H]
+      \centering
+      \includegraphics[scale=0.8]{stationary_time_series.png}
+    \end{figure}
+
+  \subsubsection{How to test for stationarity}
+    To determine whether a time series is stationary or not, the Augmented Dickey Fuller(ADF) test can be performed. ADF performs a hypothesis test and upon observing p-value $p < \alpha$ where $\alpha$ is commonly 0.05, the hypothesis is rejected and the data is considered to be stationary.
+
+  \subsubsection{Methods of making a time series stationary}
+    If you have a non-stationary time series, there are a few ways to make it stationary. The shampoo dataset is clearly non stationary because there is a defined upwards trend. Using the ADF test, the p-value comes out to $1>0.05$ so there is weak evidence against the null hypothesis which confirms our statement.
+
+    The most common practice to make a time series stationary is differencing. Differencing involves creating a new dataset where the values at time $t$ is equal to the difference between the original value at time $t$ and original value at $t-1$. So if $Y$ is the new dataset and $y$ is the original data, then
+    \begin{equation*}
+      Y_t = y_t - y_{t-1}.
+    \end{equation*}
+    The p-value from the ADF test is about $1.8 \times 10^{-10} < 0.05$ so the data is now stationary when differenced once.
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=\linewidth]{diff_both.png}
+    \end{figure}
+    Sometimes the differenced data will not make the data stationary enough and it may be necessary to difference the data again known as 2nd order differencing. Note, the 2nd order difference is the first differnce of the first difference so it comes out to
+    \begin{equation*}
+      Y_t = (y_t - y_{t-1}) - (y_{t-1} - y_{t-2}).
+    \end{equation*}
+    There are various other techniques that can be performed and combined with one another to make your data more stationary. These include model fitting, non-linear transformations, or seasonal differencing.
+
+    \subsubsection{Backshift Notation}
+    Before we jump into defining what an ARIMA model is, there is a useful backshift operator $B$ denoting the time series lags,
+    \begin{equation*}
+      By_t = y_{t-1}.
+    \end{equation*}
+    $B$ effectively shifts that data back one time period. So naturally, two applications of $B$ shifts the data back two time periods. 
+    \begin{align*}
+      B(By_t) &= B^2y_t \\
+      &= y_{t-2}.
+    \end{align*}
+    If we describe how differencing works using this notation it comes out to
+    \begin{align*}
+      Y_t &= y_t - y_{t-1} \\
+      &= y_t - By_t \\
+      &= (1 - B)y_t.
+    \end{align*}
+    In general, the $d$'th order of differencing is defined as 
+    \begin{equation*}
+      Y_t = (1 - B)^dy_t.
+    \end{equation*}
+    This notation is great as we can use $B$ is an algebraic manner which greatly simplifies some upcoming formulas.
 
   \subsubsection{Autoregressive Models}
     The term \emph{autoregressive} defines that the model uses a linear combination of previous values of a variable and learned predictors. This differs from a typical regression model which predicts based on a linear combination of the input features and learned predictors.
@@ -379,21 +334,19 @@ sorting=none
     \end{figure}
 
   \subsubsection{Putting It All Together}
-  When we combine differencing, an AR, and an MA model, we obtain an ARIMA model. It's general equation is as follows
-  \begin{gather*}
-    y_t' = \mu + \phi_1 y_{t-1}' + ... + \phi_p y_{t-p}' + \theta_1 \varepsilon_{t-1}' + ... + \theta_q \varepsilon_{t-q}'\\
-    \text{or in equivalent backshift notation}\\
-    (1 - \phi_1B - ... - \phi_pB^p)(1-B)^dy_t = \mu + (\theta_1B + ... + \theta_qB^q)\varepsilon_t.
-  \end{gather*}
-  where $y_t'$ is the differenced data. Note that the backshift notation already takes into account the order of differencing $d$ in its equation.
-
-  An ARIMA model has 3 parameters and can be expressed as ARIMA$(p,d,q)$.
+  When we combine differencing, an AR, and an MA model, we obtain an ARIMA model. An ARIMA model has 3 parameters and can be expressed as ARIMA$(p,d,q)$
   \begin{itemize}
     \item $p$ is order of autoregressive component
     \item $d$ is the order of differencing to be performed on the data
     \item $q$ is the order of moving averages component
   \end{itemize}
-  This generalised model is great since we don't have to difference the data ourselves and allows for the combination of AR$(p)$ and MA$(q)$ models.  
+  It's general equation is as follows
+  \begin{gather*}
+    y_t' = \mu + \phi_1 y_{t-1}' + ... + \phi_p y_{t-p}' + \theta_1 \varepsilon_{t-1}' + ... + \theta_q \varepsilon_{t-q}'\\
+    \text{or in equivalent backshift notation}\\
+    (1 - \phi_1B - ... - \phi_pB^p)(1-B)^dy_t = \mu + (\theta_1B + ... + \theta_qB^q)\varepsilon_t.
+  \end{gather*}
+  where $y_t'$ is the differenced data. This generalised model is great since we don't have to difference the data ourselves and allows for the combination of AR$(p)$ and MA$(q)$ models.  
 
   Running through a list of parameters, we can see effects of different values for the parameters.
 
@@ -427,35 +380,7 @@ sorting=none
     \caption{Fits for different values of $p$ and $q$}
   \end{figure}
 
-  \subsubsection{Model Scoring}
-  There are a few ways to score how well ARIMA models fit and predict. The most popular way is using Akaine's Information Criterion (AIC). It can be written as 
-
-  \begin{equation*}
-    AIC = -2log(L) + 2(p + q + k + 1),
-  \end{equation*}
-  where $L$ is the likelihood of the data, $k = 1$ if $\mu \ne 0$ and $k = 0$ if $\mu = 0$. The general goal is to pick the model which minimises this value. Other values such as the Bayesian Information Criterion (BIC) and root mean squared error are also good metrics to measure and consider for your model.
-
-  Looking at the previous models, we can compare their AIC:
-  \begin{center}
-    \begin{tabular}{||c c||} 
-     \hline
-     Model & AIC \\ [0.5ex] 
-     \hline\hline
-     ARIMA$(0,1,0)$ & 447.8405 \\ 
-     \hline
-     ARIMA$(1,1,1)$ & 430.1539 \\
-     \hline
-     ARIMA$(1,1,0)$ & 429.1197 \\ 
-     \hline
-     ARIMA$(0,1,1)$ & 433.8894 \\
-     \hline
-     ARIMA$(2,1,1)$ & 430.3742 \\
-     \hline
-     ARIMA$(1,1,2)$ & 431.4727 \\
-     \hline
-    \end{tabular}
-  \end{center}
-  Here, it looks like our ARIMA$(1,1,0)$ and ARIMA$(1,1,1)$ models had the best AIC scores.
+  Picking the right parameter values is dataset specific but often there are auto\_arima packages in Python and R which can find optimal values based on your data. Observing the autocorrelation function (ACF) and partial autocorrelation function (PACF) plots often also give a good indication of what parameter values you should choose.
 
   \subsubsection{Coefficient Estimation}
   Estimating the coefficients for an ARIMA model is often a tricky task as there needs to be a balance between having a good fit for the data while not overfitting. For my implementation, both the AR and MA terms were calculated similarly using the Constrained Optimization BY Linear Approximation (COBYLA) algorithm which optimises based on the sum of squared errors. To avoid overfitting the data, I set constraints on the coefficients namely,
@@ -466,52 +391,6 @@ sorting=none
   \end{itemize}
   
   The same constraints are put for $\theta_1,...,\theta_q$. In practice, ARIMA packages in Python and R use Maximum Likelihood Estimation to estimate the coefficients which often invoves much more complicated computations. There are also more complicated constraints, especially as the values of $p$ and $q$ increase, which these packages handle that account for the invertability and stationarity constraints.
-
-  \newpage
-  \subsubsection{Order Choosing}
-  Up until now, we have been manually setting the parameters $p$, $d$, and $q$ seemingly by observing which model fits the best or which one has the best AIC score. However, there are systematic methods of narrowing down the search space. This is where we look at the autocorrelation function (ACF) plots and partial autocorrelation (PACF) plots to help determine our optimal parameters. Autocorrelation is a way of measuring the similarity between values in a time series and their past. An autocorrelation of $+1$ means that there is a perfect positive correlation while $-1$ represents a perfect negative correlation. Partial autocorrelation is similar to autocorrelation but slightly more complicated to compute. PACF again measures similarity between $y_t$ and $y_{t-\Delta}$ but adjusts for the presence of the other terms of short lag ($y_{t-1}, y_{t-2},...,y_{t-\Delta-1}$).
-
-  \begin{figure}[H]
-    \centering
-    \captionsetup{justification=centering}
-    \begin{subfigure}[b]{\linewidth}
-      \includegraphics[height=6.2cm, width=\linewidth]{acf_pacf_data.png}
-      \caption{ACF and PACF of undifferenced data}
-    \end{subfigure}
-    \begin{subfigure}[b]{\linewidth}
-      \includegraphics[height=6.2cm, width=\linewidth]{acf_pacf_first.png}
-      \caption{ACF and PACF of order 1 differenced data}
-    \end{subfigure}
-    % \caption{ACF and PACF plots of our non-differenced and once differenced data}
-  \end{figure}
-  
-
-  In a perfect scenario, we would want no correlation between the series and the lags of itself. Of course, this is almost impossible to achieve so the blue region highlights where we wish our spikes to lie. 
-
-  Firstly, we have to choose the order of differencing. It is not sufficient to say that because a once differenced series is stationary then that should be the order. Higher order differencing may produce better results. This is where we look at the autocorrelation function (ACF) plot to help pick the value for $d$. 
-
-  Duke University professor, Dr Robert Nau presents a few rules for interpreting these graphs and how to estimate the optimal value for $d$.
-  \newline
-  \newline
-  \emph{\say{Rule 1: If the series has positive autocorrelations out to a high number of lags (say, 10 or more), then it probably needs a higher order of differencing.}\\
-  \say{Rule 2: If the lag-1 autocorrelation is zero or negative, or the autocorrelations are all small and patternless, then the series does not need a higher order of differencing. If the lag-1 autocorrelation is -0.5 or more negative, the series may be overdifferenced.  BEWARE OF OVERDIFFERENCING.}\\
-  Dr Robert Nau, Statistical Forecasting}
-  \newline
-
-  Looking at the ACF plot for our undifferenced data, it mostly stays positive until around lag 11 so by rule 1, we should difference at least once. We can see that rule 1 no longer applies and rule 2 is applied. Observe that the lag-1 autocorrelation does go negative so a good choice would be $d=1$. Note that the value is less than $-0.5$ which the rule warns us of overdifferencing. However, previously we looked at the ADF tests for differenced and non-differenced and it was clear that differencing was required so $d=1$ is a good choice.
-
-  Using this method can be preferred over the trial and error method with the ADF test if we only care about differencing our data.\\
-  By looking at the ACF and PACF plots of a stationary series, we can generally identify the numbers of AR and/or MA terms that are needed. Dr Nau has identified more rules in identifying these values.
-  \newline
-  \newline
-  \emph{\say{Rule 6: If the partial autocorrelation function (PACF) of the differenced series displays a sharp cutoff and/or the lag-1 autocorrelation is positive, then consider adding one or more AR terms to the model. The lag which the PACF cuts off is the indicated number of AR terms.}\\
-  \say{Rule 7: If the autocorrelation function (ACF) of the differenced series displays a sharp cutoff and/or the lag-1 autocorrelation is negative, then consider adding an MA term to the model. The lag which the ACF cuts off is the indicated number of MA terms.}}
-  \newline
-
-  Rule 6 helps us determine the AR terms. From the PACF plot, at lag-1 there is a steep drop into the negatives then settles into the blue region. Hence, we probably need 1 AR term. Similarly by rule 7, we should pick 1 MA term.
-
-  This gives us an ARIMA$(1,1,1)$ which we have seen before. This gives us an ARIMA$(1,1,1)$ model which we have seen before. In Python there is a package known as pmd\_arima which has a nice function called auto\_arima which computes the best parameters given some data. In this case, it gives back a parameter list of $(1,1,2)$ so our estimation was pretty close and shows that these rules are not absolute.
-  
 
   \subsubsection{Forecasting}
   So far, we have shown how to fit an ARIMA model on a well-defined time series. But we have not gone into how it forecasts unseen data. It is quite simple and involves 3 steps:
@@ -612,7 +491,7 @@ sorting=none
   \end{align*}
 
   \subsubsection{Initial Values for Trend and Seasonal Components}
-  Similar to the non seasonal method, values can be estimated for the initial trend and initial seasonal components to speed up the optimisation process.
+  Similar to the non-seasonal methods, values can be estimated for the initial trend and initial seasonal components to speed up the optimisation process.
 
   \subsubsection*{Initial Trend}
   For Holt Linear, we simply used the first two data points for the initial trend. Since we have seasonal data, we can make a better estimate by taking the average trend between the first two seasons:
@@ -634,21 +513,22 @@ sorting=none
   \end{align*}
   For multiplicative, instead of taking the difference, we divide the data point by the respective average, i.e. $\frac{y_1}{A_1}$.
 
+  \subsubsection{Example}
   \begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.49\linewidth}
+    \begin{subfigure}[b]{0.45\linewidth}
       \includegraphics[width=\linewidth]{holt_winters_add_fit.png}
        \caption{Additive fit}
     \end{subfigure}
-    \begin{subfigure}[b]{0.49\linewidth}
+    \begin{subfigure}[b]{0.45\linewidth}
       \includegraphics[width=\linewidth]{holt_winters_mult_fit.png}
       \caption{Multiplicative fit}
     \end{subfigure}
-    \begin{subfigure}[b]{0.49\linewidth}
+    \begin{subfigure}[b]{0.45\linewidth}
       \includegraphics[width=\linewidth]{holt_winters_add_forecast.png}
        \caption{Additive forecast}
     \end{subfigure}
-    \begin{subfigure}[b]{0.49\linewidth}
+    \begin{subfigure}[b]{0.45\linewidth}
       \includegraphics[width=\linewidth]{holt_winters_mult_forecast.png}
       \caption{Multiplicative forecast}
     \end{subfigure}
@@ -659,11 +539,13 @@ sorting=none
     \caption{Fits and forecasts for Holt-Winters' method}
   \end{figure}
 
-  Looking at the comparitive forecast, the differences between additive and multiplicative become apparent. The difference between the peaks and dips for each season become larger as time goes on whereas it stays constant in the additive case.
+  Looking at the comparitive forecast, the differences between additive and multiplicative become clear. The peaks and dips for each season become larger as time goes on whereas it stays constant in the additive case.
 
   \newpage
   \subsection{Seasonal ARIMA}
-  If non-seasonal ARIMA wasn't complicated enough, there exists a seasonal extension which introduces 3 new parameters. A seasonal ARIMA model has two components, non-seasonal and seasonal, which are both structurally the same. Each have their own AR, MA and order of differencing parameters. Combined with non-seasonal differencing, taking a seasonal difference can in some instances help make the data more stationary. Seasonal differencing is simply $y_t' = y_t - y_{t-m}$. Seasonal ARIMA models can be written as 
+  If non-seasonal ARIMA wasn't complicated enough, there exists a seasonal extension which introduces 3 new parameters. A seasonal ARIMA model has two components, non-seasonal and seasonal, which are both structurally the same. Each have their own AR, MA and order of differencing parameters. Combined with non-seasonal differencing, taking a seasonal difference can in some instances help make the data more stationary. Seasonal differencing is simply $y_t' = y_t - y_{t-m}$. 
+  
+  Seasonal ARIMA models can be written as 
   \begin{equation*}
     ARIMA(p,d,q)\times(P,D,Q)_m
   \end{equation*}
@@ -676,64 +558,32 @@ sorting=none
       \mu + (1 + \theta_1B + ... \theta_qB^q)(1 + \Theta_1B + ... \Theta_QB^{mQ})\varepsilon_t.
     \end{split}
   \end{equation*}
-
-  Using the milk data, we pick $m = 12$ since the data is monthly.
-  First let's figure out our order of non-seasonal and seasonal orders of differencing. We can first try 1 order of seasonal differencing and looking at the ACF and PACF graphs.
-  \begin{figure}[H]
-    \centering
-    \captionsetup{justification=centering}
-    \begin{subfigure}[b]{\linewidth}
-      \includegraphics[width=\linewidth]{acf_pacf_seasonaldiff_data.png}
-    \end{subfigure}
-    \caption{ACF and PACF for seasonal differenced data}
-  \end{figure}
-
-  The slow decrease in the ACF signifies and p-value $\approx 0.1608 >=0.05$ indicates that we need more orders of differencing. This time we will try include a non-seasonal difference.
-  \begin{figure}[H]
-    \centering
-    \captionsetup{justification=centering}
-    \begin{subfigure}[b]{\linewidth}
-      \includegraphics[width=\linewidth]{acf_pacf_seasonaldiff_nonseasonaldiff_data.png}
-    \end{subfigure}
-    \caption{ACF and PACF for seasonal differenced + non seasonal differenced data}
-  \end{figure}
-
-  This looks a lot better. With a p-value $\approx 1.8654\times10^{-5}<0.05$ we can be happy with our orders of differencing being $d=1$ and $D=1$. Note, by the equation, the order in which you difference the series, either seasonal or non-seasonal first, does not make a difference to the values of the overall differenced series.
-  
-  Once again, Dr Nau has 2 rules in picking these parameters:
-  \newline
-  \emph{\say{Rule 12: If the series has a strong and consistent seasonal pattern, then you should use an order of seasonal differencing--but never use more than one order of seasonal differencing or more than 2 orders of total differencing (seasonal+nonseasonal).}\\
-  \say{Rule 13: If the autocorrelation at the seasonal period is positive, consider adding an SAR term to the model. If the autocorrelation at the seasonal period is negative, consider adding an SMA term to the model. Try to avoid mixing SAR and SMA terms in the same model, and avoid using more than one of either kind.}}
-
-  Combining these and the previous rules, it may be wise to pick a\\
-  SARIMA$(1,1,1)\times(0,1,1)_{12}$ model which comes out with an AIC $=1068.064$. Running this through the
-  auto\_arima function, surprisingly yields a SARIMA$(2,0,0)\times(0,1,1)_{12}$ model with an AIC $=1076.388$. Both models fit the data extremely well and the forecasts are able to replicate the rise and fall pattern.
+  In practice, picking the right values for the parameters is very dataset specific. Similarly to ARIMA, the same auto\_arima packages can be used to optimise the parameters for SARIMA models. Otherwise, looking at the ACF and PACF plots also provide a good indicator of what values to choose.
 
   \begin{figure}[H]
     \centering
     \captionsetup{justification=centering}
-    \begin{subfigure}[b]{\linewidth}
+    \begin{subfigure}[b]{0.49\linewidth}
       \includegraphics[width=\linewidth]{SARIMA_111_011_12.png}
     \end{subfigure}
-    \begin{subfigure}[b]{\linewidth}
+    \begin{subfigure}[b]{0.49\linewidth}
       \includegraphics[width=\linewidth]{SARIMA_111_011_12_forecast.png}
     \end{subfigure}
     \caption{SARIMA$(1,1,1)\times(0,1,1)_{12}$ fit and forecasts}
-  \end{figure}
-
-  \begin{figure}[H]
-    \centering
-    \captionsetup{justification=centering}
-    \begin{subfigure}[b]{\linewidth}
+    \begin{subfigure}[b]{0.49\linewidth}
       \includegraphics[width=\linewidth]{SARIMA_200_011_12.png}
     \end{subfigure}
-    \begin{subfigure}[b]{\linewidth}
+    \begin{subfigure}[b]{0.49\linewidth}
       \includegraphics[width=\linewidth]{SARIMA_200_011_12_forecast.png}
     \end{subfigure}
     \caption{SARIMA$(2,0,0)\times(0,1,1)_{12}$ fit and forecasts}
   \end{figure}
 
   \section{Conclusion}
+  We covered two of the most popular time series forecasting methods in exponential smoothing and ARIMA models which use vastly different methods. As previously mentioned, accurate forecasting is practically impossible, especially when you are only given a time and value. Recurrent and convolutional neural networks have been employed to deal with extra factors but they require a lot of computational power to operate. 
+
+  \section{Reflection}
+  I came across this area during my previous internship where I simply just used the built in packages without really knowing how any of it worked. The fact that the major project was very open ended got me curious and motivated my choice of this topic. During my initial research, I found out how few manual implementations of these models were, especially ARIMA. They all just used the same external libraries with very little explanation. Slowly, after reading more scholarly papers and textbooks, I was able to get a solid fundamental understanding of the mathematics and processes which drive these models and started on the implementation. Throughout the implementation stage, I got caught up trying to get the same results as the external libraries but no matter how many different approaches I tried, I could never fully accomplish it and eventually settled that I was "close enough". Overall, this was a fun project to work on and could be useful to me sometime in the future.
 
   \section{Resources}
   \url{https://www.probabilitycourse.com/chapter10/10_1_4_stationary_processes.php}
