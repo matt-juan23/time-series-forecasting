@@ -30,19 +30,13 @@ sorting=none
   \singlespacing
   \newpage
   \section{Introduction to Time Series'}
-  Time series are found all over the place and are extremely useful
-  to analyse and more importantly, forecast. There are many situations where
-  you want to predict past your last data point.
-  Use cases include:
+  Time series are found all over the place and are extremely useful to analyse and more importantly, forecast. There are many situations where you want to predict past your last data point. Use cases include:
   \begin{itemize}
     \item Traders predicting the stock market so they know when to buy or sell
     \item Data centre operators identifying when a critical system may go down or is acting irregularly
     \item Retail store managers knowing how to maximise what stock they order to maximise profit and minimise items that won't sell
   \end{itemize}
-  Unfortunatly, just like humans, it is impossible to predict the future.
-  However, by analysing the time series, it is possible to formulate
-  statistical properites that can be used to give a rough estimate of
-  where the data is heading.
+  Unfortunatly, just like humans, it is impossible to predict the future. However, by analysing the time series, it is possible to formulate statistical properites that can be used to give a rough estimate of where the data is heading. This report will explore the mathematics behind the popular exponential smoothing and ARIMA forecasting models with an accompanying implementation in Python.
   
   \newpage
   
@@ -53,30 +47,30 @@ sorting=none
     \end{figure}
 
   \subsection{Exponential Smoothing}
-    As the name suggests, Exponential Smoothing models are essentially weighted averages of past observations which decay exponentially over time. This type allows for a reliable and quick way to forecast for a wide array of time series'. This section of the paper will go into an implementation of simple exponential smoothing, Holt's linear trend method, and the damped trend method.
+    As the name suggests, Exponential Smoothing models are essentially weighted averages of past observations which decay exponentially over time. This type allows for a straightforward way to forecast for a wide range of time series'. This section of the paper will go into an implementation of simple exponential smoothing, Holt's linear trend method, and the damped trend method.
   
 
   \subsubsection{Simple Exponential Smoothing}
-  This method of forecasting is extremely simple and is useful when there is no clear trend or seasonal pattern in the data. As mentioned, this method uses a weighted average where the weights decrease exponentially the further in the past the associated observation is. Therefore, for a time series with $T$ data points, we can define such an forecast equation as:
+  This method of forecasting is extremely simple and is useful when there is no clear trend or seasonal pattern in the data. As mentioned, this method uses a smoothing parameter $\alpha$ which exponentially decreases the further in the past the associated observation is. Therefore, for a time series with $T$ data points, we can define such an forecast equation as:
   \begin{equation*}
     \hat{y}_{T+1} = \alpha y_T + \alpha(1-\alpha)y_{T-1} + \alpha(1-\alpha)^2y_{T-2} + \alpha(1-\alpha)^3y_{T-3} + ...,
   \end{equation*}
-  where $0 \le \alpha \le 1$ is the smoothing parameter and $\hat{y}_{T}$ is the forecasted value at time $T+1$. This equation can be simplified by using the forecasted value at time $T$ to predict the value at time $T+1$ resulting in
+  where $0 \le \alpha \le 1$ and $\hat{y}_{T}$ is the forecasted value at time $T+1$. This equation can be simplified by using the forecasted value at time $T$ to predict the value at time $T+1$ resulting in
   \begin{equation*}
     \hat{y}_{T+1} = \alpha y_T + (1-\alpha)\hat{y}_{T}.
   \end{equation*}
 
-  This equation can also be expressed in component form defined as a level $\ell_t$ smoothing equation and forecasting equation:
+  This equation can also be expressed in component form defined as a level smoothing equation and forecasting equation:
   \begin{align*}
     & \text{Level equation} & \ell_t &= \alpha y_t + (1-\alpha)(\ell_{t-1})  \\
     & \text{Forecast equation} & \hat{y}_{t+h} &= \ell_t \\
   \end{align*}
-  where $0 \le \alpha \le 1$. The forecasting equation produces a "flat" forecast equal to the last level component since setting $t=T$, we get
+  By setting $h=1$, we get the fitted values for the model. The forecasting equation produces a "flat" forecast equal to the last level component since setting $t=T$, we get
   \begin{equation*}
     \hat{y}_{T+h} = \ell_T, \qquad h=1,2,....
   \end{equation*}
   
-  Let's see how this is applied to the shampoo dataset. Firstly, we need to estimate values for $\alpha$ as well as the initial level $\ell_0$. By minimising the SSE (sum of squared errors), the estimated parameters are $\alpha=0.40$ and $\ell_0=202.78$. The table below shows the calculations using these parameters.
+  Let's see how this is applied to the shampoo dataset. Firstly, we need to estimate values for $\alpha$ as well as the initial level $\ell_0$. By minimising the SSE (sum of squared errors), the estimated parameters are $\alpha=0.39938593$ and $\ell_0=202.78$. The table below shows the calculations using these parameters.
 
   \begin{center}
     \begin{tabular}{||c c c c||} 
@@ -133,18 +127,18 @@ sorting=none
   \end{figure}
 
   \subsubsection{Trend Methods}
-  This section will show Holt's linear trend method and Gardner \& McKenzie's damped trend method which extend simple exponential smoothing by incorporating the trend component. Trend is simply the general upwards or downwards motion of the data.
+  This section will show Holt's linear trend method and Gardner \& McKenzie's damped trend method which extend simple exponential smoothing by incorporating the trend component. Trend is simply the general upwards or downwards motion of the data. This component helps to forecast in the right direction.
 
   \subsubsection*{Holt's Linear Trend Method}
   This method now has three equations, a level smoothing equation, a trend smoothing equation, and a forecast equation:
   \begin{align*}
     \text{Forecast equation} && \hat{y}_{t+h|t} &= \ell_{t} + hb_{t} \\
     \text{Level equation}   && \ell_{t} &= \alpha y_{t} + (1 - \alpha)(\ell_{t-1} + b_{t-1})\\
-    \text{Trend equation}   && b_{t}    &= \beta(\ell_{t} - \ell_{t-1}) + (1 -\beta)b_{t-1},
+    \text{Trend equation}   && b_{t}    &= \beta(\ell_{t} - \ell_{t-1}) + (1 -\beta)b_{t-1}
   \end{align*}
-  where $0 \le \alpha, \beta \le 1$. By including the trend, forecasts are no longer flat but a linear function of $h$. As such, the forecasted value at time $T+h$ is equal to the last level plus $h$ multiplied by the last calculated trend value.
+  where $0 \le \alpha, \beta \le 1$. Similarly, setting $h=1$ produces the fitted values of the model. By including the trend, forecasts are no longer flat but a linear function of $h$. As such, the forecasted value at time $T+h$ is equal to the last level plus $h$ multiplied by the last calculated trend value.
 
-  There are now two smoothing parameters $\alpha$ and $\beta$ as well as two initial states $\ell_0$ and $b_0$ which are estimated to $\alpha=0.49, \beta=0.27, \ell_0=262.93, b_0=-18.01$. Giving an initial trend of $y_1-y_0$ can help the optimizer narrow the search space for this parameter.
+  There are now two smoothing parameters $\alpha$ and $\beta$ as well as two initial states $\ell_0$ and $b_0$ which are estimated to $\alpha=0.48709065, \beta=0.27116407, \ell_0=262.93, b_0=-18.01$. Giving an initial trend of $y_1-y_0$ can help the optimizer narrow the search space for this parameter.
 
   \begin{center}
     \begin{tabular}{||c c c c c||} 
@@ -159,7 +153,7 @@ sorting=none
      \hline
      3 & 183.1 & 174.58 & -25.46 & 239.96 \\
      \hline
-     4 & 119.3 & 134.60 & -29.40 & 166.489 \\
+     4 & 119.3 & 134.60 & -29.40 & 166.49 \\
      \hline
      \vdots & \vdots & \vdots & \vdots & \vdots \\
      \hline
@@ -201,7 +195,7 @@ sorting=none
   \end{figure}
 
   \subsubsection*{Damped Trend Method}
-  Holt's Linear method show a constant increasing or decreasing trend which extends indefinitely into the future. However, in reality this method can be quite inaccurate for extended forecasts. Gardner \& McKenzie introduced a dampening parameter $\phi$, where $0 \le \phi \le 1$. This parameter dampens the trend to forecast a flat line after some time.
+  Holt's Linear method show a constant increasing or decreasing trend which extends infinitely into the future. However, in reality, this method can be quite inaccurate for extended forecasts. Gardner \& McKenzie introduced a dampening parameter $\phi$, where $0 \le \phi \le 1$. This parameter dampens the trend to eventually forecast a flat line after some time.
 
   The component form of this method is:
   \begin{align*}
@@ -209,7 +203,7 @@ sorting=none
     \text{Level equation}   && \ell_{t} &= \alpha y_{t} + (1 - \alpha)(\ell_{t-1} + \phi b_{t-1})\\
     \text{Trend equation}   && b_{t}    &= \beta(\ell_{t} - \ell_{t-1}) + (1 -\beta)\phi b_{t-1}.
   \end{align*}
-  When $\phi=1$, this method produces Holt's linear method.
+  When $\phi=1$, this method produces Holt's linear method. In practice, $\phi$ is normally set between 0.8 and 0.9.
 
   \begin{figure}[H]
     \centering
@@ -218,12 +212,18 @@ sorting=none
     \caption{Forecasts for different values of $\phi$}
   \end{figure}
 
+  \subsubsection{Parameter Estimation}
+  Each type of exponential smoothing method needs smoothing parameters and initial values to be chosen. These can be chosen manually but a better option is to get a computer to optimise these value for us. A common method which I implemented is done by minimising the sum of the squared errors (SSE) done quickly through an optimisation library:
+  \begin{equation*}
+    SSE = \sum^{T}_{i=1}\left(y_i - \hat{y_i}\right)^2.
+  \end{equation*}
+
   \subsection{ARIMA}
     ARIMA is an extension of the ARMA or Box-Jenkin model popularised by George E. P. Box and Gwilym Jenkins in 1970. The main difference is that ARIMA simply allows for an extra parameter $d$ which defines how much differencing should be done before fitting the model, whereas ARMA assumes the data is stationary already. 
     ARIMA is actually a combination of three components, an autoregressive model (AR), a moving averages model (MA), and an integrated (I) part denoting the order of differencing. The ultimate goal of ARIMA is to filter the noise and extrapolate the signal wihtin a time series.
   
   \subsubsection{Stationarity}
-    ARIMA models work best on data that is "stationary". Intuitively, a stationary time series has statistical properties, such as mean, variance, covariance, etc, that remain constant throughout the whole time.
+    ARIMA models work best on data that is "stationary". Intuitively, a stationary time series possesses statistical properties, such as mean, variance, covariance, etc, that remain constant throughout the whole time.
     Below shows the differences between stationary and non-stationary processes.
     \begin{figure}[H]
       \centering
@@ -231,7 +231,7 @@ sorting=none
     \end{figure}
 
   \subsubsection{How to test for stationarity}
-    To determine whether a time series is stationary or not, the Augmented Dickey Fuller(ADF) test can be performed. ADF performs a hypothesis test and upon observing p-value $p < \alpha$ where $\alpha$ is commonly 0.05, the hypothesis is rejected and the data is considered to be stationary.
+    To determine whether a time series is stationary or not, the Augmented Dickey Fuller(ADF) test can be performed. ADF performs a hypothesis test and upon observing p-value $p < \alpha$ where $\alpha$ is commonly 0.05, the hypothesis is rejected and the data is considered to be stationary. Performing the ADF test on the undifferenced shampoo dataset produces $p=1.0>0.05$ so the data is considered non-stationary.
 
   \subsubsection{Methods of making a time series stationary}
     If you have a non-stationary time series, there are a few ways to make it stationary. The shampoo dataset is clearly non stationary because there is a defined upwards trend. Using the ADF test, the p-value comes out to $1>0.05$ so there is weak evidence against the null hypothesis which confirms our statement.
@@ -245,18 +245,18 @@ sorting=none
       \centering
       \includegraphics[width=\linewidth]{diff_both.png}
     \end{figure}
-    Sometimes the differenced data will not make the data stationary enough and it may be necessary to difference the data again known as 2nd order differencing. Note, the 2nd order difference is the first differnce of the first difference so it comes out to
+    Sometimes the differenced data will not make the data stationary enough and it may be necessary to difference the data again known as 2nd order differencing. Note, the 2nd order difference is the first difference of the first difference so it comes out to
     \begin{equation*}
       Y_t = (y_t - y_{t-1}) - (y_{t-1} - y_{t-2}).
     \end{equation*}
     There are various other techniques that can be performed and combined with one another to make your data more stationary. These include model fitting, non-linear transformations, or seasonal differencing.
 
     \subsubsection{Backshift Notation}
-    Before we jump into defining what an ARIMA model is, there is a useful backshift operator $B$ denoting the time series lags,
+    Before we jump into defining what an ARIMA model is, there is a useful backshift operator $B$,
     \begin{equation*}
       By_t = y_{t-1}.
     \end{equation*}
-    $B$ effectively shifts that data back one time period. So naturally, two applications of $B$ shifts the data back two time periods. 
+    The time series values prior to the value at time $t$ are known as "lags". $B$ effectively shifts that data back one time period.So naturally, two applications of $B$ shifts the data back two time periods. 
     \begin{align*}
       B(By_t) &= B^2y_t \\
       &= y_{t-2}.
@@ -290,9 +290,7 @@ sorting=none
     \end{gather*}
     We can see that we are using previous known values as the features to predict the future.
 
-    Let's see how this works for the first differenced data. Firstly, the lags are calculated and then we estimate parameters using these lags and our original time series values. We simply do a dot product between the coefficients and add it to our value for $\mu$ to retrieve our predictions. 
-    
-    This is the resulting predictions of a few AR$(p)$ models.
+    Let's see how this works for the first differenced data. This is the resulting predictions of a few AR$(p)$ models.
 
     \begin{figure}[H]
       \centering
@@ -330,60 +328,80 @@ sorting=none
         \includegraphics[width=\linewidth]{residuals2.png}
         \caption{MA(2)}
       \end{subfigure}
-      \caption{Error terms for MA(1) with estimated $\theta_1 = -0.58305195$ and MA(2) with estimated $\theta_1 = -0.71206191, \theta_2 =  0.28793809$. Both generally look normally distributed with 0 mean.}
+      \caption{Error terms for MA(1) with estimated $\theta_1 = -0.58305195$ and MA(2) with estimated $\theta_1 = -0.71206191, \theta_2 =  0.28793809$.}
     \end{figure}
 
   \subsubsection{Putting It All Together}
-  When we combine differencing, an AR, and an MA model, we obtain an ARIMA model. An ARIMA model has 3 parameters and can be expressed as ARIMA$(p,d,q)$
+  When we combine differencing, an AR, and an MA model, we obtain an ARIMA model. ARIMA has 3 parameters and can be expressed as ARIMA$(p,d,q)$.
   \begin{itemize}
-    \item $p$ is order of autoregressive component
+    \item $p$ is the order of autoregressive component
     \item $d$ is the order of differencing to be performed on the data
     \item $q$ is the order of moving averages component
   \end{itemize}
-  It's general equation is as follows
+  It's model equation is as follows
   \begin{gather*}
     y_t' = \mu + \phi_1 y_{t-1}' + ... + \phi_p y_{t-p}' + \theta_1 \varepsilon_{t-1}' + ... + \theta_q \varepsilon_{t-q}'\\
     \text{or in equivalent backshift notation}\\
-    (1 - \phi_1B - ... - \phi_pB^p)(1-B)^dy_t = \mu + (\theta_1B + ... + \theta_qB^q)\varepsilon_t.
+    \begin{array}{c c c c}
+      (1-\phi_1B - \cdots - \phi_p B^p) & (1-B)^d y_{t} &= &\mu + (\theta_1 B + \cdots + \theta_q B^q)\varepsilon_t\\
+      {\uparrow} & {\uparrow} & &{\uparrow}\\
+      \text{AR($p$)} & \text{$d$ differences} & & \text{MA($q$)}\\
+    \end{array}
   \end{gather*}
-  where $y_t'$ is the differenced data. This generalised model is great since we don't have to difference the data ourselves and allows for the combination of AR$(p)$ and MA$(q)$ models.  
 
+  where $y_t'$ is the differenced data.  Here you can see how both AR and MA models are incorporated into the full model.
+  \newpage
   Running through a list of parameters, we can see effects of different values for the parameters.
-
   \begin{figure}[H]
     \centering
     \captionsetup{justification=centering}
-    \begin{subfigure}[b]{0.49\linewidth}
+    \begin{subfigure}[b]{0.415\linewidth}
       \includegraphics[width=\linewidth]{ARIMA_010.png}
       \caption{ARIMA$(0, 1, 0)$}
     \end{subfigure}
-    \begin{subfigure}[b]{0.49\linewidth}
+    \begin{subfigure}[b]{0.415\linewidth}
       \includegraphics[width=\linewidth]{ARIMA_111.png}
       \caption{ARIMA$(1, 1, 1)$}
     \end{subfigure}
-    \begin{subfigure}[b]{0.49\linewidth}
+    \begin{subfigure}[b]{0.415\linewidth}
       \includegraphics[width=\linewidth]{ARIMA_110.png}
       \caption{ARIMA$(1, 1, 0)$}
     \end{subfigure}
-    \begin{subfigure}[b]{0.49\linewidth}
+    \begin{subfigure}[b]{0.415\linewidth}
       \includegraphics[width=\linewidth]{ARIMA_011.png}
       \caption{ARIMA$(0, 1, 1)$}
     \end{subfigure}
-    \begin{subfigure}[b]{0.49\linewidth}
+    \begin{subfigure}[b]{0.415\linewidth}
       \includegraphics[width=\linewidth]{ARIMA_211.png}
       \caption{ARIMA$(2, 1, 1)$}
     \end{subfigure}
-    \begin{subfigure}[b]{0.49\linewidth}
+    \begin{subfigure}[b]{0.415\linewidth}
       \includegraphics[width=\linewidth]{ARIMA_112.png}
       \caption{ARIMA$(1, 1, 2)$}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.415\linewidth}
+      \includegraphics[width=\linewidth]{ARIMA_512.png}
+      \caption{ARIMA$(5, 1, 2)$}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.415\linewidth}
+      \includegraphics[width=\linewidth]{ARIMA_215.png}
+      \caption{ARIMA$(2, 1, 5)$}
     \end{subfigure}
     \caption{Fits for different values of $p$ and $q$}
   \end{figure}
 
-  Picking the right parameter values is dataset specific but often there are auto\_arima packages in Python and R which can find optimal values based on your data. Observing the autocorrelation function (ACF) and partial autocorrelation function (PACF) plots often also give a good indication of what parameter values you should choose.
+  \subsubsection{ACF and PACF}
+  Picking the right parameter values is dataset specific but there are auto\_arima packages in Python and R which can search for optimal values based on your data. Observing and analysing the autocorrelation function (ACF) and partial autocorrelation function (PACF) plots often also give a good indication of what values of $p$ and $q$ you should choose. ACF is a numerical representation of how correlated a time series is to a lagged version of itself. Conversely, PACF represents the amount of correlation between a time series and a lagged version of itself after adjusting for all other terms of a shorter lag.
+  \begin{figure}[H]
+    \centering
+    \captionsetup{justification=centering}
+    \includegraphics[width=\linewidth]{acf_pacf_first.png}
+    \caption{ACF and PACF plot for first differenced data}
+  \end{figure}
+  Obviously a time series is perfectly correlated to itself lagged zero times. Here, ACF helps determine the MA order and PACF for the AR order. We are looking for large drops or the earliest lag somewhere within the blue zone which represents the 95\% confidence level. So for the shampoo dataset, a value of $p=1\text{ or }2$ and $q=1\text{ or }2$ would be suitable.
 
   \subsubsection{Coefficient Estimation}
-  Estimating the coefficients for an ARIMA model is often a tricky task as there needs to be a balance between having a good fit for the data while not overfitting. For my implementation, both the AR and MA terms were calculated similarly using the Constrained Optimization BY Linear Approximation (COBYLA) algorithm which optimises based on the sum of squared errors. To avoid overfitting the data, I set constraints on the coefficients namely,
+  Estimating the coefficients for an ARIMA model is an extremely important but often a tricky task as there needs to be a balance between having a good fit for the data while not overfitting. For my implementation, similar to exponential smoothing, both the AR and MA terms were optimised to minimise the sum of squared errors. To avoid overfitting the data, I set constraints on the coefficients namely,
   \begin{itemize}
     \item $-1 \leq \phi_p \leq 1$
     \item $\phi_i + \phi_{i+1} \leq 1 \quad \text{for} \ i=1,2,...,p-1$
@@ -393,7 +411,7 @@ sorting=none
   The same constraints are put for $\theta_1,...,\theta_q$. In practice, ARIMA packages in Python and R use Maximum Likelihood Estimation to estimate the coefficients which often invoves much more complicated computations. There are also more complicated constraints, especially as the values of $p$ and $q$ increase, which these packages handle that account for the invertability and stationarity constraints.
 
   \subsubsection{Forecasting}
-  So far, we have shown how to fit an ARIMA model on a well-defined time series. But we have not gone into how it forecasts unseen data. It is quite simple and involves 3 steps:
+  So far, we have shown how to fit an ARIMA model on a stationary time series so let's see how this model forecasts future data points. It is quite simple and involves 3 steps:
   \begin{enumerate}
     \item Expand the model's ARIMA backshift equation and group by the powers of B
     \item Convert to equation with only $y_t$'s and move all terms that isn't $y_t$ to the right side of the equation
@@ -424,7 +442,7 @@ sorting=none
   \begin{equation*}
     y_{T+2} = \mu + (1 + \phi_1)y_{T+1} + (\phi_2 - \phi_1)y_{T} - \phi_2y_{T-1} + \theta_2\varepsilon_{T-1}.
   \end{equation*}
-  Observe that there should be a $\theta_1\varepsilon_{T}$ term but since we set the time series value at $T$ to be equal to the predicted value, this error term evaluates to 0. We are essentially taking our predicted value as the truth which is why all the error terms eventually become 0. Hence, if you predict $S > q$ future time steps, all MA terms disappear. 
+  Observe that there should be a $\theta_1\varepsilon_{T}$ term but since we set the time series value at $T$ to be equal to the predicted value, this error term evaluates to 0. We are essentially taking our predicted value as the truth which is why all the error terms eventually become 0. Hence, if you predict $h > q$ future time steps, all MA terms disappear. Looking at the below plots, while the ARIMA(5,1,2) forecasts looks the most realistic, it is still quite noisy and the ARIMA(1,1,1) or ARIMA(1,1,2) might prove to be a better forecasting method.
 
   \begin{figure}[H]
     \centering
@@ -453,13 +471,21 @@ sorting=none
       \includegraphics[width=\linewidth]{forecast_ARIMA_112.png}
       \caption{ARIMA$(1, 1, 2)$}
     \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{forecast_ARIMA_512.png}
+      \caption{ARIMA$(5, 1, 2)$}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.49\linewidth}
+      \includegraphics[width=\linewidth]{forecast_ARIMA_215.png}
+      \caption{ARIMA$(2, 1, 5)$}
+    \end{subfigure}
     \caption{Forecasting for 15 future time steps from different ARIMA models. (c) and (d) are equivalent to an AR(1) and MA(1) with 1 order of differencing.}
   \end{figure}
   
   \newpage
 
   \section{Seasonal models}
-  Many time series data in the real work exhibit some form of seasonality. This includes higher network traffic during peak hours of the day or increased spending during Christmas. As such, there is a defined frequency of seasonality commonly denoted as $m$. For example $m=4$ could represent quarterly data and $m=12$ for monthly data. We will again explore the ARIMA and Exponential Smoothing algorithms and how they were extended to account for seasonality. For these examples, we will use the monthly milk dataset. This dataset is great since there is a clear seasonal pattern and the data is trending upward.
+  Many time series data in the real work exhibit some form of seasonality. This includes higher network traffic during peak hours of the day or increased spending during Christmas. As such, there is a defined frequency of seasonality commonly denoted as $m$. For example $m=4$ could represent quarterly data and $m=12$ for monthly data. Here we will explore how seasonal ARIMA (SARIMA) and the Holt-Winters' seasonal method works and accounts for the seasonal component of the time series. For these examples, we will use the monthly milk dataset so $m=12$. This dataset is great since there is a clear seasonal pattern and has an upward trend.
   \begin{figure}[H]
     \centering
     \captionsetup{justification=centering}
@@ -512,23 +538,24 @@ sorting=none
     &\vdots
   \end{align*}
   For multiplicative, instead of taking the difference, we divide the data point by the respective average, i.e. $\frac{y_1}{A_1}$.
-
+  \newpage
   \subsubsection{Example}
+  Applying both methods to the milk dataset, the smoothing parameters for additive came out to $\alpha=0.057,\beta=0,\gamma=0.951$ and the multiplicative came out to $\alpha=0,\beta=0.097,\gamma=0.878$.
   \begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.45\linewidth}
+    \begin{subfigure}[b]{0.48\linewidth}
       \includegraphics[width=\linewidth]{holt_winters_add_fit.png}
-       \caption{Additive fit}
+       \caption{Additive fit }
     \end{subfigure}
-    \begin{subfigure}[b]{0.45\linewidth}
+    \begin{subfigure}[b]{0.48\linewidth}
       \includegraphics[width=\linewidth]{holt_winters_mult_fit.png}
       \caption{Multiplicative fit}
     \end{subfigure}
-    \begin{subfigure}[b]{0.45\linewidth}
+    \begin{subfigure}[b]{0.48\linewidth}
       \includegraphics[width=\linewidth]{holt_winters_add_forecast.png}
        \caption{Additive forecast}
     \end{subfigure}
-    \begin{subfigure}[b]{0.45\linewidth}
+    \begin{subfigure}[b]{0.48\linewidth}
       \includegraphics[width=\linewidth]{holt_winters_mult_forecast.png}
       \caption{Multiplicative forecast}
     \end{subfigure}
@@ -539,26 +566,25 @@ sorting=none
     \caption{Fits and forecasts for Holt-Winters' method}
   \end{figure}
 
-  Looking at the comparitive forecast, the differences between additive and multiplicative become clear. The peaks and dips for each season become larger as time goes on whereas it stays constant in the additive case.
+  Looking at the comparitive forecast, the differences between additive and multiplicative become clear. The difference between the peaks and dips in the multiplicative forecast become larger each season on whereas it stays constant in the additive case.
 
-  \newpage
   \subsection{Seasonal ARIMA}
-  If non-seasonal ARIMA wasn't complicated enough, there exists a seasonal extension which introduces 3 new parameters. A seasonal ARIMA model has two components, non-seasonal and seasonal, which are both structurally the same. Each have their own AR, MA and order of differencing parameters. Combined with non-seasonal differencing, taking a seasonal difference can in some instances help make the data more stationary. Seasonal differencing is simply $y_t' = y_t - y_{t-m}$. 
+  If non-seasonal ARIMA wasn't complicated enough, there exists a seasonal extension which introduces 3 new parameters. A seasonal ARIMA model has two components, non-seasonal and seasonal, which are both structurally the same. Each have their own AR, MA and order of differencing parameters. Combined with non-seasonal differencing, taking a seasonal difference can in some instances help make the data more stationary. Seasonal differencing is simply $y_t' = y_t - y_{t-m}$.
   
   Seasonal ARIMA models can be written as 
   \begin{equation*}
     ARIMA(p,d,q)\times(P,D,Q)_m
   \end{equation*}
-  where $P$, $D$, and $Q$ are the seasonal AR (SAR) terms, seasonal differencing order, and seasonal MA (SMA) terms respectively with $m$ being the period.
+  where $P$, $D$, and $Q$ are the seasonal AR (SAR) terms, order of seasonal differencing, and seasonal MA (SMA) terms respectively with $m$ being the period.
 
   Using backshift notation, the entire equation can be written as:
   \begin{equation*}
     \begin{split}
-      (1 - \phi_1B - ... - \phi_pB^p)(1 - \Phi_1B - ... \Phi_PB^{mP})(1 - B)^d(1 - B)^D y_t = \\
-      \mu + (1 + \theta_1B + ... \theta_qB^q)(1 + \Theta_1B + ... \Theta_QB^{mQ})\varepsilon_t.
+      (1 - \phi_1B - ... - \phi_pB^p)(1 - \Phi_1B - ... \Phi_PB^{mP})(1 - B)^d(1 - B^m)^D y_t = \\
+      \mu + (1 + \theta_1B + ... +\theta_qB^q)(1 + \Theta_1B + ... \Theta_QB^{mQ})\varepsilon_t.
     \end{split}
   \end{equation*}
-  In practice, picking the right values for the parameters is very dataset specific. Similarly to ARIMA, the same auto\_arima packages can be used to optimise the parameters for SARIMA models. Otherwise, looking at the ACF and PACF plots also provide a good indicator of what values to choose.
+  In practice, picking the right values for the parameters is very dataset specific. Similarly to ARIMA, the same auto\_arima packages can be used to optimise the parameters for SARIMA models.
 
   \begin{figure}[H]
     \centering
@@ -580,10 +606,12 @@ sorting=none
   \end{figure}
 
   \section{Conclusion}
-  We covered two of the most popular time series forecasting methods in exponential smoothing and ARIMA models which use vastly different methods. As previously mentioned, accurate forecasting is practically impossible, especially when you are only given a time and value. Recurrent and convolutional neural networks have been employed to deal with extra factors but they require a lot of computational power to operate. 
+  We covered two of the most popular time series forecasting methods in exponential smoothing and ARIMA models which use vastly different approaches as well as implementing them in Python. As previously mentioned, accurate forecasting is practically impossible, especially when you are only given a time and value. Recurrent and convolutional neural networks have been employed to deal with extra factors but they require a lot of computational power to operate.
+
+  Choosing which model to pick is dependent on the type of data you want to forecast. Both are extremely robust and powerful models for time series forecasting. In my experience, for large values of $m>50$, SARIMA models can take a considerable more amount of time to fit for practically the same results.
 
   \section{Reflection}
-  I came across this area during my previous internship where I simply just used the built in packages without really knowing how any of it worked. The fact that the major project was very open ended got me curious and motivated my choice of this topic. During my initial research, I found out how few manual implementations of these models were, especially ARIMA. They all just used the same external libraries with very little explanation. Slowly, after reading more scholarly papers and textbooks, I was able to get a solid fundamental understanding of the mathematics and processes which drive these models and started on the implementation. Throughout the implementation stage, I got caught up trying to get the same results as the external libraries but no matter how many different approaches I tried, I could never fully accomplish it and eventually settled that I was "close enough". Overall, this was a fun project to work on and could be useful to me sometime in the future.
+  I came across this area during my previous internship where I simply just used the built in packages without really knowing how any of it worked. The fact that the major project was very open ended got me curious and motivated my choice of this topic. During my initial research, I found out how few manual implementations of these models were, especially ARIMA. They all just used the same external libraries with very little explanation. Slowly, after reading more scholarly papers and textbooks, I was able to get a solid fundamental understanding of the mathematics and processes which drive these models and started on the implementation. Throughout the implementation stage, I got caught up trying to get the same results as the external libraries but no matter how many different approaches I tried, I could never fully accomplish it and eventually settled that I was "close enough". Overall, this was a fun project to work on and could be very useful to me sometime in the future.
 
   \section{Resources}
   \url{https://www.probabilitycourse.com/chapter10/10_1_4_stationary_processes.php}
