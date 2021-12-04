@@ -1,0 +1,33 @@
+The files that contain the implementation are
+ - ARIMA.ipynb
+ - SARIMA.ipynb
+ - Exp_Smoothing.ipynb
+
+Each file should be opened and run in Jupyter Notebook or another notebook environment with at least Python 3.8 installed. 
+The implementation might work with lower version of Python but untested
+
+Needed Python libraries
+ - numpy
+ - pandas
+ - matplotlib
+ - statsmodels
+ - scipy
+
+Functions that you can run in each file
+ARIMA.ipynb
+ - myARIMA(data, p, d, q)
+   you can modify the p and q parameters as you want. d = 0 or d = 1 are the only values that work
+
+SARIMA.ipynb
+ - Just copy paste the structure of the code block and change the parameters as desired
+
+Exp_Smoothing.ipynb
+ - SES(data, h)
+   h = number of future timesteps to forecast
+
+ - holt_linear(data, phi, h)
+   optional value for 0 <= phi <= 1. default is 1
+
+ - holt_winters(milk, mode, m, h)
+   mode is either "add" or "mult"
+   m should be 12 for the milk dataset
