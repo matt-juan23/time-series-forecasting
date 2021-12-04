@@ -18,12 +18,11 @@ sorting=none
 ]{biblatex}
 \addbibresource{mybib.bib}
 
-\title{Time Series Analysis and Forecasting}
+\title{Time Series Forecasting Models}
 \author{Matthew Juan z5259434}
 \date{}
 \begin{document}
   \maketitle
-  % \begin{flushleft}
   \newpage
   \doublespacing
   \tableofcontents
@@ -55,7 +54,7 @@ sorting=none
   \begin{equation*}
     \hat{y}_{T+1} = \alpha y_T + \alpha(1-\alpha)y_{T-1} + \alpha(1-\alpha)^2y_{T-2} + \alpha(1-\alpha)^3y_{T-3} + ...,
   \end{equation*}
-  where $0 \le \alpha \le 1$ and $\hat{y}_{T}$ is the forecasted value at time $T+1$. This equation can be simplified by using the forecasted value at time $T$ to predict the value at time $T+1$ resulting in
+  where $0 \le \alpha \le 1$ and $\hat{y}_{T+1}$ is the first forecasted value. This equation can be simplified by using the predicted value at time $T$ to predict the value at time $T+1$ resulting in
   \begin{equation*}
     \hat{y}_{T+1} = \alpha y_T + (1-\alpha)\hat{y}_{T}.
   \end{equation*}
@@ -127,7 +126,7 @@ sorting=none
   \end{figure}
 
   \subsubsection{Trend Methods}
-  This section will show Holt's linear trend method and Gardner \& McKenzie's damped trend method which extend simple exponential smoothing by incorporating the trend component. Trend is simply the general upwards or downwards motion of the data. This component helps to forecast in the right direction.
+  This section will show Holt's linear trend method and Gardner \& McKenzie's damped trend method which extend simple exponential smoothing by incorporating the trend component. Trend is simply the general upwards or downwards motion of the data. This component helps to forecast in the right direction instead of just a flat line.
 
   \subsubsection*{Holt's Linear Trend Method}
   This method now has three equations, a level smoothing equation, a trend smoothing equation, and a forecast equation:
@@ -189,7 +188,7 @@ sorting=none
     \end{subfigure}
     \begin{subfigure}[b]{0.49\linewidth}
       \includegraphics[width=\linewidth]{holt_linear_forecast.png}
-      \caption{Forecasted values $\phi=0.9$}
+      \caption{Forecasted values}
     \end{subfigure}
     \caption{Fitted and forecasted values using Holt linear trend method}
   \end{figure}
@@ -223,7 +222,7 @@ sorting=none
     ARIMA is actually a combination of three components, an autoregressive model (AR), a moving averages model (MA), and an integrated (I) part denoting the order of differencing. The ultimate goal of ARIMA is to filter the noise and extrapolate the signal wihtin a time series.
   
   \subsubsection{Stationarity}
-    ARIMA models work best on data that is "stationary". Intuitively, a stationary time series possesses statistical properties, such as mean, variance, covariance, etc, that remain constant throughout the whole time.
+    ARIMA models work best on data that is "stationary". A stationary time series possesses statistical properties, such as mean, variance, covariance, etc, that remain constant throughout the whole time.
     Below shows the differences between stationary and non-stationary processes.
     \begin{figure}[H]
       \centering
@@ -231,14 +230,14 @@ sorting=none
     \end{figure}
 
   \subsubsection{How to test for stationarity}
-    To determine whether a time series is stationary or not, the Augmented Dickey Fuller(ADF) test can be performed. ADF performs a hypothesis test and upon observing p-value $p < \alpha$ where $\alpha$ is commonly 0.05, the hypothesis is rejected and the data is considered to be stationary. Performing the ADF test on the undifferenced shampoo dataset produces $p=1.0>0.05$ so the data is considered non-stationary.
+    To determine whether a time series is stationary or not, the Augmented Dickey Fuller(ADF) test can be performed. ADF performs a hypothesis test and upon observing p-value $p < \alpha$ where $\alpha$ is commonly 0.05, the hypothesis is rejected and the data is considered to be stationary. Performing the ADF test on the original shampoo dataset produces $p=1.0>0.05$ so the data is considered non-stationary.
 
   \subsubsection{Methods of making a time series stationary}
-    If you have a non-stationary time series, there are a few ways to make it stationary. The shampoo dataset is clearly non stationary because there is a defined upwards trend. Using the ADF test, the p-value comes out to $1>0.05$ so there is weak evidence against the null hypothesis which confirms our statement.
+    If you have a non-stationary time series, there are a few ways to make it stationary. The shampoo dataset is clearly non stationary because there is a defined upwards trend.
 
-    The most common practice to make a time series stationary is differencing. Differencing involves creating a new dataset where the values at time $t$ is equal to the difference between the original value at time $t$ and original value at $t-1$. So if $Y$ is the new dataset and $y$ is the original data, then
+    The most common practice to make a time series stationary is differencing. Differencing involves creating a new dataset where the values at time $t$ is equal to the difference between the original value at time $t$ and original value at $t-1$. So if $y'$ is the new dataset and $y$ is the original data, then
     \begin{equation*}
-      Y_t = y_t - y_{t-1}.
+      y'_t = y_t - y_{t-1}.
     \end{equation*}
     The p-value from the ADF test is about $1.8 \times 10^{-10} < 0.05$ so the data is now stationary when differenced once.
     \begin{figure}[H]
@@ -247,7 +246,7 @@ sorting=none
     \end{figure}
     Sometimes the differenced data will not make the data stationary enough and it may be necessary to difference the data again known as 2nd order differencing. Note, the 2nd order difference is the first difference of the first difference so it comes out to
     \begin{equation*}
-      Y_t = (y_t - y_{t-1}) - (y_{t-1} - y_{t-2}).
+      y'_t = (y_t - y_{t-1}) - (y_{t-1} - y_{t-2}).
     \end{equation*}
     There are various other techniques that can be performed and combined with one another to make your data more stationary. These include model fitting, non-linear transformations, or seasonal differencing.
 
@@ -263,22 +262,22 @@ sorting=none
     \end{align*}
     If we describe how differencing works using this notation it comes out to
     \begin{align*}
-      Y_t &= y_t - y_{t-1} \\
+      y'_t &= y_t - y_{t-1} \\
       &= y_t - By_t \\
       &= (1 - B)y_t.
     \end{align*}
     In general, the $d$'th order of differencing is defined as 
     \begin{equation*}
-      Y_t = (1 - B)^dy_t.
+      y'_t = (1 - B)^dy_t.
     \end{equation*}
     This notation is great as we can use $B$ is an algebraic manner which greatly simplifies some upcoming formulas.
 
   \subsubsection{Autoregressive Models}
-    The term \emph{autoregressive} defines that the model uses a linear combination of previous values of a variable and learned predictors. This differs from a typical regression model which predicts based on a linear combination of the input features and learned predictors.
-    Autoregressive models has one parameter $p$ which defines the order of the model. This parameter defines how many previous values influence the one being predicted. 
+    The term \emph{autoregressive} defines that the model uses a linear combination of some previous values and a list of coefficients.
+    Autoregressive models have one parameter $p$ which defines the order of the model. This parameter influences how many previous values are used to predict the next. 
     An AR$(1)$ model is simply defines a model in which the predicted value is equal to some linear combination of the value at the previous time step
     \begin{equation*}
-      y_t = \mu + \phi_1 y_{t-1} + \varepsilon_t,
+      y_t = \mu + \phi_1 y_{t-1},
     \end{equation*}
     where $\mu$ is the average period to period change.
     An AR$(2)$ model uses the previous two timesteps as so on.
@@ -290,7 +289,7 @@ sorting=none
     \end{gather*}
     We can see that we are using previous known values as the features to predict the future.
 
-    Let's see how this works for the first differenced data. This is the resulting predictions of a few AR$(p)$ models.
+    Let's see how this works for the first differenced data.
 
     \begin{figure}[H]
       \centering
@@ -309,13 +308,13 @@ sorting=none
     Observe that there are subtle changes between the two. If we kept on increasing the AR term, our model would fit this data extremely well. In machine learning, this is commonly known as overfitting and future forecasts can be very inaccurate.
 
   \subsubsection{Moving Average Models}
-    In a sort of similar manner, Moving Average (MA) models use the errors of past forecasts to predict. An MA model instead has parameter $q$ so an MA$(q)$ model can be written similarly as
+    Moving Average (MA) models istead use the errors of past forecasts to predict. An MA model instead has a single parameter $q$ so an MA$(q)$ model can be written as
     \begin{gather*}
       y_t = \mu + \theta_1 \varepsilon_{t-1} + \theta_2 \varepsilon_{t-2} + ... + \theta_q \varepsilon_{t-q}\\
       \text{or in equivalent backshift notation}\\
       y_t = \mu + (\theta_1B + \theta_2B^2 + ... + \theta_qB^q)\varepsilon_t.
     \end{gather*}
-    If your data is properly stationary, the error terms produced should form white noise in the form of a normal distribution with $0$ mean and $\theta^2$ variance.
+    If your data is fully stationary, the error terms produced should form white noise in the form of a normal distribution with $0$ mean and $\theta^2$ variance.
 
     \begin{figure}[H]
       \centering
@@ -349,9 +348,9 @@ sorting=none
     \end{array}
   \end{gather*}
 
-  where $y_t'$ is the differenced data.  Here you can see how both AR and MA models are incorporated into the full model.
+  where again $y_t'$ is the differenced data.  Here you can see how both AR and MA models are incorporated into the full model and why the backshift operator is very useful for its definition.
   \newpage
-  Running through a list of parameters, we can see effects of different values for the parameters.
+  We can see effects of different values for the parameters on how they fit the first differenced data.
   \begin{figure}[H]
     \centering
     \captionsetup{justification=centering}
@@ -442,7 +441,9 @@ sorting=none
   \begin{equation*}
     y_{T+2} = \mu + (1 + \phi_1)y_{T+1} + (\phi_2 - \phi_1)y_{T} - \phi_2y_{T-1} + \theta_2\varepsilon_{T-1}.
   \end{equation*}
-  Observe that there should be a $\theta_1\varepsilon_{T}$ term but since we set the time series value at $T$ to be equal to the predicted value, this error term evaluates to 0. We are essentially taking our predicted value as the truth which is why all the error terms eventually become 0. Hence, if you predict $h > q$ future time steps, all MA terms disappear. Looking at the below plots, while the ARIMA(5,1,2) forecasts looks the most realistic, it is still quite noisy and the ARIMA(1,1,1) or ARIMA(1,1,2) might prove to be a better forecasting method.
+  Observe that there should be a $\theta_1\varepsilon_{T}$ term but since we set the time series value at $T$ to be equal to the predicted value, this error term evaluates to 0. We are essentially taking our predicted value as the truth which is why all the error terms eventually become 0. Hence, if you predict $h > q$ future time steps, all MA terms disappear. 
+  
+  Looking at the below plots, while the ARIMA(5,1,2) forecasts looks the most realistic, it is still quite noisy so the ARIMA(1,1,1) or ARIMA(1,1,2) might prove to be a better forecasting model.
 
   \begin{figure}[H]
     \centering
@@ -606,18 +607,13 @@ sorting=none
   \end{figure}
 
   \section{Conclusion}
-  We covered two of the most popular time series forecasting methods in exponential smoothing and ARIMA models which use vastly different approaches as well as implementing them in Python. As previously mentioned, accurate forecasting is practically impossible, especially when you are only given a time and value. Recurrent and convolutional neural networks have been employed to deal with extra factors but they require a lot of computational power to operate.
+  We covered two of the most popular time series forecasting methods in exponential smoothing and ARIMA models as well as implementing them in Python. As previously mentioned, accurate forecasting is practically impossible, especially when you are only given a time and value. Recurrent and convolutional neural networks have been employed to deal with extra factors but they require a lot of computational power to operate.
 
-  Choosing which model to pick is dependent on the type of data you want to forecast. Both are extremely robust and powerful models for time series forecasting. In my experience, for large values of $m>50$, SARIMA models can take a considerable more amount of time to fit for practically the same results.
+  Choosing which model to pick is dependent on the type of data you want to forecast as they use different approaches. Both are extremely robust and powerful models for time series forecasting. In my experience, for large values of $m>50$, SARIMA models can take a considerable more amount of time to fit than the Holt-Winters' model for practically the same results.
 
   \section{Reflection}
-  I came across this area during my previous internship where I simply just used the built in packages without really knowing how any of it worked. The fact that the major project was very open ended got me curious and motivated my choice of this topic. During my initial research, I found out how few manual implementations of these models were, especially ARIMA. They all just used the same external libraries with very little explanation. Slowly, after reading more scholarly papers and textbooks, I was able to get a solid fundamental understanding of the mathematics and processes which drive these models and started on the implementation. Throughout the implementation stage, I got caught up trying to get the same results as the external libraries but no matter how many different approaches I tried, I could never fully accomplish it and eventually settled that I was "close enough". Overall, this was a fun project to work on and could be very useful to me sometime in the future.
+  I came across this area during my previous internship where I simply just used the built-in packages without really knowing how any of it worked. The fact that the major project was very open ended got me curious and motivated my choice of this topic. During my initial research, I found out how few manual implementations of these models were, especially ARIMA. A lot just used the same external libraries with very little explanation. Slowly, after reading more scholarly papers and textbooks, I was able to get a solid fundamental understanding of the mathematics and processes which drive these models and started on the implementation. Throughout the implementation stage, I got caught up trying to get the same results as the external libraries but no matter how many different approaches I tried, I could never fully accomplish it and eventually settled that I was "close enough". Overall, this was a fun challenge to work on and will be very useful to me sometime in the future.
 
-  \section{Resources}
-  \url{https://www.probabilitycourse.com/chapter10/10_1_4_stationary_processes.php}
-  \url{https://www.statology.org/detrend-data/}
-
-  bibliography\cite{articleFactCheck}
+  \nocite{*}
   \printbibliography
-  % \end{flushleft}
 \end{document}
